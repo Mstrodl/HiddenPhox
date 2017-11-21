@@ -1,0 +1,38 @@
+{
+  "name": "hiddenphox",
+  "version": "9.0.0",
+  "description": "A discord bot",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BoxOfFlex/HiddenPhox.git"
+  },
+  "keywords": [
+    "discord"
+  ],
+  "author": "BoxOfFlex",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BoxOfFlex/HiddenPhox/issues"
+  },
+  "homepage": "https://github.com/BoxOfFlex/HiddenPhox#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "eris": "github:abalabahaha/eris#dev",
+    "expr-eval": "^1.0.1",
+    "google": "^2.1.0",
+    "jimp": "^0.2.27",
+    "request": "^2.81.0",
+    "require-reload": "^0.2.2",
+    "sequelize": "^4.22.7",
+    "snekfetch": "^3.5.8",
+    "sqlite3": "^3.1.13",
+    "xmldom": "^0.1.27",
+    "xpath": "0.0.24",
+    "youtube-dl": "^1.11.1",
+    "ytdl-core": "^0.14.0"
+  }
+}
