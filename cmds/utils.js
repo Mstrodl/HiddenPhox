@@ -22,7 +22,7 @@ let _eval = function(ctx,msg,args){
             msg.channel.createMessage(":white_check_mark: Output:\n```js\n"+require("util").inspect(out,{depth:0})+"\n```");
         }
     }else{
-        msg.channel.createMessage("No permission.");
+        msg.channel.createMessage("https://i.imgur.com/yU94Rhp.png");
     }
 }
 
@@ -514,6 +514,28 @@ let esnipe = function(ctx,msg,args){
     }
 }
 
+let dehoist = function(ctx,msg,args){
+	if(!args){
+		msg.channel.createMessage("Arguments required.");
+	}else if(!msg.channel.permissionsOf(msg.author.id).has("manageNicknames")){
+		msg.channel.createMessage("You do not have `Manage Nicknames` permission.");
+	}else if(!msg.channel.permissionsOf(ctx.bot.user.id).has("manageNicknames")){
+		msg.channel.createMessage("I do not have `Manage Nicknames` permission.");
+	}else{
+		ctx.utils.lookupUser(ctx,msg,args || "")
+		.then(u=>{
+			u = msg.channel.guild.members.get(u.id);
+			u.edit({nick:`\uD82F\uDCA2${u.nick.slice(0,30) || u.username.slice(0,30)}`})
+			.then(()=>{
+				msg.channel.createMessage(":ok_hand:");
+			})
+			.catch(r=>{
+				msg.channel.createMessage(`Could not set nick:\n\`\`\`\n${r}\`\`\``);
+			});
+		});
+	}
+}
+
 module.exports = [
     {
         name:"eval",
@@ -604,6 +626,12 @@ module.exports = [
         name:"esnipe",
         desc:"Snipe recently edited messages.",
         func:esnipe,
+        group:"utils"
+    },
+    {
+        name:"dehoist",
+        desc:"Dehoist a user's name or nickname.",
+        func:dehoist,
         group:"utils"
     }
 ]
