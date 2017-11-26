@@ -5,7 +5,7 @@ let messageDelete = function(msg,ctx){
 
 let messageUpdate = function(msg,omsg,ctx){
 	if(!msg.channel.guild) return;
-	if(omsg.content && msg.content && omsg.content == msg.content) return;
+	if(omsg && msg && omsg.content && msg.content && omsg.content == msg.content) return;
 	ctx.esnipes.set(msg.channel.id,{omsg:omsg,msg:msg});
 }
 

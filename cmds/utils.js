@@ -483,6 +483,9 @@ let snipe = function(ctx,msg,args){
                 text:`Sniped by ${msg.author.username}#${msg.author.discriminator}`,
                 icon_url:msg.author.avatarURL
             },
+            image:{
+                url:m.attachments.length > 0 && m.attachments[0].url || ""
+            },
             timestamp:new Date(m.timestamp)
         }});
     }
@@ -525,6 +528,10 @@ let dehoist = function(ctx,msg,args){
 		ctx.utils.lookupUser(ctx,msg,args || "")
 		.then(u=>{
 			u = msg.channel.guild.members.get(u.id);
+            if(u.nick && u.nick.startsWith("\uD82F\uDCA2")){
+                msg.channel.createMessage("User already dehoisted.");
+                return
+            }
 			u.edit({nick:`\uD82F\uDCA2${u.nick.slice(0,30) || u.username.slice(0,30)}`})
 			.then(()=>{
 				msg.channel.createMessage(":ok_hand:");
