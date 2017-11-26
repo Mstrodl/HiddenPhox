@@ -104,30 +104,36 @@ utils.lookupUser = function(ctx,msg,str){
 	});
 }
 
-utils.logInfo = function(ctx,string){
+function timeString(){
 	let d = new Date();
-	let h = d.getHours();
-	let m = d.getMinutes();
-	let s = d.getSeconds();
-	let time = (h < 10 ? "0"+h : h)+":"+(m < 10 ? "0"+m : m)+":"+(s < 10 ? "0"+s : s);
+	let h, m, s = d.getHours(), d.getMinutes(), d.getSeconds();
+	return (h < 10 ? "0"+h : h)+":"+(m < 10 ? "0"+m : m)+":"+(s < 10 ? "0"+s : s);
+}
+
+function safeString(string){
+	/* the best alternatives for safe strings are here!!!! */
+	string = string.replace("`", "'");
+	string = string.replace("<@", "<@\u200b");
+	string = string.replace("<#", "<#\u200b");
+	string = string.replace("<&", "<&\u200b");
+	return string;
+}
+
+utils.logInfo = function(ctx,string){
+	let time = timeString();
+	string = safeString(string);
 	ctx.bot.createMessage(ctx.logid,`:page_facing_up: **[INFO] [${time}]** \`${string}\``);
 }
 
 utils.logWarn = function(ctx,string){
-	let d = new Date();
-	let h = d.getHours();
-	let m = d.getMinutes();
-	let s = d.getSeconds();
-	let time = (h < 10 ? "0"+h : h)+":"+(m < 10 ? "0"+m : m)+":"+(s < 10 ? "0"+s : s);
+	let time = timeString();
+	string = safeString(string);
 	ctx.bot.createMessage(ctx.logid,`:warning: **[WARN] [${time}]** \`${string}\``);
 }
 
 utils.logError = function(ctx,string){
-	let d = new Date();
-	let h = d.getHours();
-	let m = d.getMinutes();
-	let s = d.getSeconds();
-	let time = (h < 10 ? "0"+h : h)+":"+(m < 10 ? "0"+m : m)+":"+(s < 10 ? "0"+s : s);
+	let time = timeString();
+	string = safeString(string);
 	ctx.bot.createMessage(ctx.logid,`<:RedTick:349381062054510604> **[ERROR] [${time}]** \`${string}\`\nCC: <@${ctx.ownerid}>`);
 }
 
