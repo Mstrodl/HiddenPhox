@@ -10,16 +10,30 @@ let _eval = function(ctx,msg,args){
         let errored = false;
         let out = "";
         try{
-            out = eval(args);
+            out = require("util").inspect(eval(args),{depth:0});
         }catch(e){
             out = e.message;
             errored = true;
         }
 
+        out = out.replace(ctx.bot.token,"lol no key 4 u");
+
         if(errored){
             msg.channel.createMessage(":warning: Output (errored):\n```js\n"+out+"\n```");
         }else{
-            msg.channel.createMessage(":white_check_mark: Output:\n```js\n"+require("util").inspect(out,{depth:0})+"\n```");
+            if ((out.toString()).length > 1980){
+                let output = out.toString();
+                ctx.libs.request.post("https://hastebin.com/documents",{body:output},function(err,res,body){
+                    if(res.statusCode == 200){
+                        let key = JSON.parse(body).key;
+                        msg.channel.createMessage(`\u2705 Output too long to send in a message: https://hastebin.com/${key}.js`);
+                    }else{
+                        msg.channel.createMessage(":warning: Cannot upload output to Hastebin.");
+                    }
+                })
+            }else{
+                msg.channel.createMessage("\u2705 Output:\n```js\n"+out+"\n```");
+            }
         }
     }else{
         msg.channel.createMessage("https://i.imgur.com/yU94Rhp.png");
@@ -532,7 +546,7 @@ let dehoist = function(ctx,msg,args){
                 msg.channel.createMessage("User already dehoisted.");
                 return
             }
-			u.edit({nick:`\uD82F\uDCA2${u.nick.slice(0,30) || u.username.slice(0,30)}`})
+			u.edit({nick:`\uD82F\uDCA2${u.nick && u.nick.slice(0,30) || u.username.slice(0,30)}`})
 			.then(()=>{
 				msg.channel.createMessage(":ok_hand:");
 			})
