@@ -1,5 +1,5 @@
 {
-  "name": "hiddenphox",
+  "name": "flexbot",
   "version": "9.0.0",
   "description": "A discord bot",
   "main": "bot.js",
@@ -8,17 +8,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BoxOfFlex/HiddenPhox.git"
+    "url": "git+https://github.com/LUModder/FlexBot.git"
   },
   "keywords": [
     "discord"
   ],
-  "author": "BoxOfFlex",
+  "author": "Flex",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/BoxOfFlex/HiddenPhox/issues"
+    "url": "https://github.com/LUModder/FlexBot/issues"
   },
-  "homepage": "https://github.com/BoxOfFlex/HiddenPhox#readme",
+  "homepage": "https://github.com/LUModder/FlexBot#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "eris": "github:abalabahaha/eris#dev",
@@ -27,7 +27,7 @@
     "jimp": "^0.2.27",
     "request": "^2.81.0",
     "require-reload": "^0.2.2",
-    "sequelize": "^4.22.7",
+    "sequelize": "^4.23.4",
     "snekfetch": "^3.5.8",
     "sqlite3": "^3.1.13",
     "xmldom": "^0.1.27",
