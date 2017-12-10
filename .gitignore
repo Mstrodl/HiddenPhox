@@ -60,3 +60,4 @@ typings/
 # im dumb ok
 config.json
 apikeys.json
+database.sqlite

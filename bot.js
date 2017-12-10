@@ -32,12 +32,13 @@ ctx.db = new ctx.libs.sequelize("database", "username", "password", {
 let initDB = require("./utils/databases.js")
 ctx.databases = initDB(ctx);
 
-ctx.vc        = new Eris.Collection();
-ctx.cmds      = new Eris.Collection();
-ctx.events    = new Eris.Collection();
-ctx.snipes    = new Eris.Collection();
-ctx.esnipes   = new Eris.Collection();
-ctx.awaitMsgs = new Eris.Collection();
+ctx.vc         = new Eris.Collection();
+ctx.cmds       = new Eris.Collection();
+ctx.events     = new Eris.Collection();
+ctx.snipes     = new Eris.Collection();
+ctx.esnipes    = new Eris.Collection();
+ctx.awaitMsgs  = new Eris.Collection();
+ctx.ratelimits = new Eris.Collection();
 
 ctx.prefix  = "hf!";
 

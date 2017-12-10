@@ -139,6 +139,35 @@ utils.logError = function(ctx,string){
 	ctx.bot.createMessage(ctx.logid,`<:RedTick:349381062054510604> **[ERROR] [${time}]** \`${string}\`\nCC: <@${ctx.ownerid}>`);
 }
 
+utils.remainingTime = function(owo){
+	let s = owo/1000
+	let h = parseInt(s/3600)
+	s=s%3600
+	let m = parseInt(s/60)
+	s=s%60
+	s=parseInt(s)
+	return (h < 10 ? "0"+h : h)+":"+(m < 10 ? "0"+m : m)+":"+(s < 10 ? "0"+s : s);
+}
+
+utils.createEvent = function(client,type,func,ctx){
+	if(type == "messageCreate"){
+		client.on("messageCreate",msg=>func(msg,ctx));
+	}else if(type == "messageReactionAdd"){
+		client.on("messageReactionAdd",(msg,emoji,uid)=>func(msg,emoji,uid,ctx));
+	}else if(type == "messageReactionRemove"){
+		client.on("messageReactionRemove",(msg,emoji,uid)=>func(msg,emoji,uid,ctx));
+	}else if(type == "messageUpdate"){
+		client.on("messageUpdate",(msg,oldMsg)=>func(msg,oldMsg,ctx));
+	}else if(type == "messageDelete"){
+		client.on("messageDelete",msg=>func(msg,ctx));
+	}else if(type == "channelUpdate"){
+		client.on("channelUpdate",(channel,oldChannel)=>func(channel,oldChannel,ctx));
+	}else{
+		utils.logWarn(ctx,"Message type not defined, attempting with only passing `msg`");
+		client.on(type,msg=>func(msg,ctx));
+	}
+}
+
 utils.google = require("./utils/google.js");
 
 module.exports = utils

@@ -77,6 +77,42 @@ let reload = function (ctx, msg, args) {
     }
 }
 
+let ereload = function(ctx,msg,args){
+    if (msg.author.id === "150745989836308480") {
+        if (ctx.libs.fs.existsSync(__dirname + "/" + args + ".js")) {
+            try {
+                let e = ctx.libs.reload(__dirname + "/../events/" + args + ".js");
+
+                if(e.event && e.func && e.name){
+                    let _e = ctx.events.get(e.event+"|"+e.name)
+                    ctx.bot.removeListener(e.event,_e.func)
+                    ctx.events.set(e.event+"|"+e.name,e);
+                    ctx.utils.createEvent(ctx.bot,e.event,e.func,ctx);
+                    ctx.utils.logInfo(ctx,`Reloaded event: ${e.event}|${e.name} (${args})`);
+                }else if(e.length){
+                    for(let i=0;i<e.length;i++){
+                        let a = e[i];
+                        if(a.event && a.func && a.name){
+                            let _e = ctx.events.get(a.event+"|"+a.name)
+                            ctx.bot.removeListener(a.event,_e.func)
+                            ctx.events.set(a.event+"|"+a.name,a);
+                            ctx.utils.createEvent(ctx.bot,a.event,a.func,ctx);
+                            ctx.utils.logInfo(ctx,`Reloaded event: ${a.event}|${a.name} (${args})`);
+                        }
+                    }
+                }
+                msg.channel.createMessage(":ok_hand:");
+            } catch (e) {
+                msg.channel.createMessage(`:warning: Error reloading: \`${e.message}\``);
+            }
+        } else {
+            msg.channel.createMessage("Event not found.")
+        }
+    } else {
+        msg.channel.createMessage("No permission.");
+    }
+}
+
 let exec = function(ctx,msg,args){
     if(msg.author.id === ctx.ownerid){
         args = args.replace(/rm \-rf/,"echo")
@@ -576,6 +612,13 @@ module.exports = [
         desc: "Reloads a command",
         func: reload,
         usage: "<command>",
+        group: "utils"
+    },
+    {
+        name: "ereload",
+        desc: "Reloads a set of events",
+        func: ereload,
+        usage: "<event>",
         group: "utils"
     },
     {

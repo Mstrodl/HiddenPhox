@@ -18,9 +18,9 @@ let help = function(ctx,msg,args){
             let g = groups[i];
 
             if(g.cmds.length>0){
-                text=text+g.name.charAt(0).toUpperCase()+g.name.slice(1)+"\n";
+                text=text+g.name.charAt(0).toUpperCase()+g.name.slice(1)+":\n";
                 g.cmds.forEach(c=>{
-                    text=text+"  \u2022 "+c.name+" - "+c.desc+"\n";
+                    text=text+"  "+c.name+" - "+c.desc+"\n";
                 });
             }
         }
