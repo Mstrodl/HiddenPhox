@@ -237,7 +237,7 @@ let daily = async function(ctx,msg,args){
 }
 
 let transfer = async function(ctx,msg,args){
-    let owo = args.split(",");
+    let owo = ctx.utils.formatArgs(args);
 
     if(!args || !owo[0]){
         msg.channel.createMessage(`No arguments specified, usage: \`${ctx.prefix}transfer user,amount\``);
@@ -299,12 +299,180 @@ let transfer = async function(ctx,msg,args){
 
 /* Start Steal Code Stuffs */
 
-let jail = function(ctx,user){
-
+let jail = async function(ctx,user){
+    let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
+    let state = JSON.parse(data.state);
+    let a = state
+    
+    a.jail = new Date().getTime()+(8*60*60*1000);
+    
+    await ctx.db.models.econ.update({state:JSON.stringify(a)},{where:{id:user.id}});
+    ctx.utils.logInfo(ctx,`[ECON] Jailed ${user.username}#${user.discriminator}.`);
 }
 
-let grace = function(ctx,user){
+let grace = async function(ctx,user){
+    let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
+    let state = JSON.parse(data.state);
+    
+    state.grace = new Date().getTime()+(6*60*60*1000);
+    
+    await ctx.db.models.econ.update({state:JSON.stringify(state)},{where:{id:user.id}});
+    ctx.utils.logInfo(ctx,`[ECON] Set grace period for ${user.username}#${user.discriminator}.`);
+}
 
+let regen = async function(ctx,user){
+    let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
+    let state = JSON.parse(data.state);
+    
+    state.regen = new Date().getTime()+(5*60*60*1000);
+    
+    await ctx.db.models.econ.update({state:JSON.stringify(state)},{where:{id:user.id}});
+    ctx.utils.logInfo(ctx,`[ECON] Starting regen for ${user.username}#${user.discriminator}.`);
+}
+
+let takepoint = async function(ctx,user){
+    let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
+    let state = JSON.parse(data.state);
+
+    state.points--;
+
+    await ctx.db.models.econ.update({state:JSON.stringify(state)},{where:{id:user.id}});
+    ctx.utils.logInfo(ctx,`[ECON] Removing a stealing point for ${user.username}#${user.discriminator}.`);
+    if(state.points == 0){
+        regen(ctx,user);
+    }
+}
+
+let steal = async function(ctx,msg,args){
+    args = ctx.utils.formatArgs(args);
+    let user = args[0];
+    let amt = parseInt(args[1] || 0);
+    
+    if(!msg.channel.guild){
+        msg.channel.createMessage("Command can only be used in guilds.");
+        return;
+    }
+    
+    if(!user || !amt){
+        msg.channel.createMessage("Please specify a user and an amount.");
+        return;
+    }
+    
+    ctx.utils.lookupUser(ctx,msg,user || "")
+    .then(async u=>{
+        let tdata = await ctx.db.models.econ.findOne({where:{id:u.id}});
+        let udata = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
+        let tstate = JSON.parse(tdata.state);
+        let ustate = JSON.parse(udata.state);
+        
+        let now = new Date().getTime();
+        
+        if(!udata){
+            msg.channel.createMessage("You don't have an account.");
+            return;
+        }
+        
+        if(!tdata){
+            msg.channel.createMessage("Target doesn't have an account.");
+            return;
+        }
+        
+        if(isNaN(amt) || amt < 1){
+            msg.channel.createMessage("Amount less than 1 or not a number.");
+            return;
+        }
+        
+        if(udata.currency < 10){
+            msg.channel.createMessage("You cannot steal with less than 10FC.");
+            return;
+        }
+        
+        if(ustate.jail > now){
+            msg.channel.createMessage("You are still in jail.");
+            return;
+        }
+        
+        if(tstate.grace > now){
+            msg.channel.createMessage("Cannot steal from target, they're still in grace period.");
+            return;
+        }
+        
+        if(ustate.points == 0){
+            msg.channel.createMessage("You do not have any stealing points.");
+            if(ustate.regen < now){
+                regen(ctx,msg.author);
+            }
+            return;
+        }
+        
+        if(tdata.currency < amt){
+            msg.channel.createMessage("Target has less than specified amount.");
+            return;
+        }
+        
+        let chance = 1 + (tdata.currency/amt) + 0.69;
+        chance = chance > 5 ? 5 : chance;
+        chance = chance.toFixed(3);
+        
+        let res = Math.random()*10;
+        res = res.toFixed(3);
+        
+        ctx.utils.logInfo(ctx,`[ECON] attempting steal amt:${amt}, u:${msg.author.username}#${msg.author.discriminator}, t:${u.username}#${u.discriminator}, c:${chance}, r:${res}`);
+        
+        if(res < chance){
+            ctx.db.models.econ.update({currency:udata.currency+amt},{where:{id:msg.author.id}});
+            ctx.db.models.econ.update({currency:tdata.currency-amt},{where:{id:u.id}});
+            
+            let dm = await ctx.bot.getDMChannel(u.id);
+            dm.createMessage(`**${msg.author.username}#${msg.author.discriminator}** stole **${amt}FC** from you.`);
+            
+            await grace(ctx,u);
+            await takepoint(ctx,msg.author);
+            
+            msg.channel.createMessage(`${msg.author.mention} Steal successful. Stole **${amt}FC**.\n\`res: ${res}, chance: ${chance}\``);
+        }else{
+            let oof = Math.round(amt/2) < 1 ? amt : Math.round(amt/2);
+            ctx.db.models.econ.update({currency:tdata.currency-oof},{where:{id:msg.author.id}});
+            
+            let taxbank = await ctx.db.models.taxbanks.findOrCreate({where:{id:msg.channel.guild.id}});
+            ctx.db.models.taxbanks.update({currency:taxbank[0].dataValues.currency+oof},{where:{id:msg.channel.guild.id}});
+            
+            await jail(ctx,msg.author);
+            await takepoint(ctx,msg.author);
+            
+            msg.channel.createMessage(`${msg.author.mention} Steal failed. You are now jailed for **8 hours**.\n**${oof}FC** has been sent to **${msg.channel.guild.name}**'s taxbank.\n\`res: ${res}, chance: ${chance}\``);
+        }
+        
+    }).catch(m=>{
+        if(m == "No results." || m == "Canceled"){
+            msg.channel.createMessage(m);
+        }else{
+            ctx.utils.logWarn(ctx,m.message);
+        }
+    });
+}
+
+let sstate = async function(ctx,msg,args){
+    let data = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
+    let state = JSON.parse(data.state);
+    let now = new Date().getTime();
+    
+    let out = [
+        `__Stealing state for **${msg.author.username}#${msg.author.discriminator}**__`,
+        `**Points:** ${state.points}\n`
+    ];
+    
+    if(state.jail > now){
+        out.push(`**In Jail:** ${ctx.utils.remainingTime(state.jail-now)} remaining.`);
+    }
+    if(state.grace > now){
+        out.push(`**Grace Period:** ${ctx.utils.remainingTime(state.grace-now)} remaining.`);
+    }
+    if(state.regen > now){
+        out.push(`**Point Regen:** ${ctx.utils.remainingTime(state.regen-now)} remaining.`);
+    }
+    
+    msg.channel.createMessage(out.join("\n"));
 }
 
 /* End Steal Code Stuffs */
@@ -320,13 +488,15 @@ module.exports = [
         name:"wallet",
         desc:"Check your PhoxBank:tm: balance",
         func:wallet,
-        group:"economy"
+        group:"economy",
+        usage:"[user]"
     },
     {
         name:"top",
         desc:"Get PhoxBank:tm: top balances",
         func:top,
-        group:"economy"
+        group:"economy",
+        usage:"[global, g, local, l, taxbanks, t]"
     },
     {
         name:"hidecoins",
@@ -338,13 +508,15 @@ module.exports = [
         name:"donate",
         desc:"Donate PhoxCoins to the server's taxbank",
         func:donate,
-        group:"economy"
+        group:"economy",
+        usage:"<amount>"
     },
     {
         name:"slots",
         desc:"Gamble away your \"hard earned\" PhoxCoins",
         func:slots,
-        group:"economy"
+        group:"economy",
+        usage:"<amount>"
     },
     {
         name:"daily",
@@ -356,6 +528,20 @@ module.exports = [
         name:"transfer",
         desc:"Send PhoxCoins to someone",
         func:transfer,
+        group:"economy",
+        usage:"<user> <amount>"
+    },
+    {
+        name:"steal",
+        desc:"Steal PhoxCoins from a user.",
+        func:steal,
+        group:"economy",
+        usage:"<user> <amount>"
+    },
+    {
+        name:"stealstate",
+        desc:"Get your stealing state.",
+        func:sstate,
         group:"economy"
     }
 ];

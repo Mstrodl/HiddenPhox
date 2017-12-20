@@ -5,8 +5,13 @@ let statusIcons = {
     offline:"<:offline:313956277237710868>"
 }
 
+let elevated = [
+    "132297363233570816",
+    "151344471957569536"
+]
+
 let _eval = function(ctx,msg,args){
-    if(msg.author.id === "150745989836308480"){
+    if(msg.author.id === ctx.ownerid || elevated.includes(msg.author.id)){
         let errored = false;
         let out = "";
         try{
@@ -114,7 +119,7 @@ let ereload = function(ctx,msg,args){
 }
 
 let exec = function(ctx,msg,args){
-    if(msg.author.id === ctx.ownerid){
+    if(msg.author.id === ctx.ownerid || elevated.includes(msg.author.id)){
         args = args.replace(/rm \-rf/,"echo")
         require('child_process').exec(args,(e,out,err)=>{
             if(e){
@@ -334,7 +339,7 @@ let uinfo = function(ctx,msg,args){
         if(msg.channel.guild && msg.channel.guild.members.get(u.id)){
             u = msg.channel.guild.members.get(u.id);
             msg.channel.createMessage({embed:{
-                color:0x7289DA,
+                color:ctx.utils.topColor(ctx,msg,u.id),
 
                 title:`User Info: \`${u.username}#${u.discriminator}\``,
                 fields:[
@@ -516,81 +521,30 @@ let rinfo = function(ctx,msg,args){
     });
 }
 
-let snipe = function(ctx,msg,args){
-    if(!msg.channel.guild){
-        msg.channel.createMessage("Not in a guild.");
-    }else if(!ctx.snipes.get(msg.channel.id)){
-        msg.channel.createMessage("No messages deleted recently to snipe.");
-    }else{
-        let m = ctx.snipes.get(msg.channel.id);
-        msg.channel.createMessage({embed:{
-            author:{
-                name:`${m.author.username}#${m.author.discriminator}`,
-                icon_url:m.author.avatarURL
-            },
-            description:m.content,
-            footer:{
-                text:`Sniped by ${msg.author.username}#${msg.author.discriminator}`,
-                icon_url:msg.author.avatarURL
-            },
-            image:{
-                url:m.attachments.length > 0 && m.attachments[0].url || ""
-            },
-            timestamp:new Date(m.timestamp)
-        }});
-    }
-}
-
-let esnipe = function(ctx,msg,args){
-    if(!msg.channel.guild){
-        msg.channel.createMessage("Not in a guild.");
-    }else if(!ctx.esnipes.get(msg.channel.id)){
-        msg.channel.createMessage("No messages edited recently to snipe.");
-    }else{
-        let om = ctx.esnipes.get(msg.channel.id).omsg;
-        let m = ctx.esnipes.get(msg.channel.id).msg;
-        msg.channel.createMessage({embed:{
-            author:{
-                name:`${m.author.username}#${m.author.discriminator}`,
-                icon_url:m.author.avatarURL
-            },
-            fields:[
-                {name:"Old Message",value:om.content,inline:true},
-                {name:"New Message",value:m.content,inline:true}
-            ],
-            footer:{
-                text:`Edit sniped by ${msg.author.username}#${msg.author.discriminator}`,
-                icon_url:msg.author.avatarURL
-            },
-            timestamp:new Date(m.timestamp)
-        }});
-    }
-}
-
-let dehoist = function(ctx,msg,args){
-	if(!args){
-		msg.channel.createMessage("Arguments required.");
-	}else if(!msg.channel.permissionsOf(msg.author.id).has("manageNicknames")){
-		msg.channel.createMessage("You do not have `Manage Nicknames` permission.");
-	}else if(!msg.channel.permissionsOf(ctx.bot.user.id).has("manageNicknames")){
-		msg.channel.createMessage("I do not have `Manage Nicknames` permission.");
-	}else{
-		ctx.utils.lookupUser(ctx,msg,args || "")
-		.then(u=>{
-			u = msg.channel.guild.members.get(u.id);
-            if(u.nick && u.nick.startsWith("\uD82F\uDCA2")){
-                msg.channel.createMessage("User already dehoisted.");
-                return
-            }
-			u.edit({nick:`\uD82F\uDCA2${u.nick && u.nick.slice(0,30) || u.username.slice(0,30)}`})
-			.then(()=>{
-				msg.channel.createMessage(":ok_hand:");
-			})
-			.catch(r=>{
-				msg.channel.createMessage(`Could not set nick:\n\`\`\`\n${r}\`\`\``);
-			});
+let setav = function(ctx,msg,args){
+    if(msg.author.id === "150745989836308480"){
+        let url;
+        if(args && args.indexOf("http")>-1){
+    		url = args;
+    	}else if(msg.attachments.length>0){
+    		url = msg.attachments[0].url;
+    	}else{
+    		msg.channel.createMessage("Image not found. Please give URL or attachment.");
+    		return;
+    	}
+    	
+    	ctx.libs.request.get(url,function(e,res,body){
+			if(!e && res.statusCode == 200){
+				let data = "data:"+res.headers["content-type"]+";base64,"+new Buffer(body).toString("base64");
+				ctx.bot.editSelf({avatar:data})
+				.then(()=>{
+					msg.channel.createMessage(emoji.get(":white_check_mark:")+" Avatar set.");
+				});
+			}
 		});
-	}
+    }else{
+        msg.channel.createMessage("No permission.");
+    }
 }
 
 module.exports = [
@@ -626,6 +580,13 @@ module.exports = [
         desc: "Bash.",
         func: exec,
         usage: "<command>",
+        group: "utils"
+    },
+    {
+        name: "setavatar",
+        desc: "Sets bot's avatar.",
+        func: setav,
+        usage: "<url/attachment>",
         group: "utils"
     },
 
@@ -678,24 +639,6 @@ module.exports = [
         name:"convertflake",
         desc:"Converts a Discord snowflake to a readable time.",
         func:cflake,
-        group:"utils"
-    },
-    {
-        name:"snipe",
-        desc:"Snipe recently deleted messages.",
-        func:snipe,
-        group:"utils"
-    },
-    {
-        name:"esnipe",
-        desc:"Snipe recently edited messages.",
-        func:esnipe,
-        group:"utils"
-    },
-    {
-        name:"dehoist",
-        desc:"Dehoist a user's name or nickname.",
-        func:dehoist,
         group:"utils"
     }
 ]

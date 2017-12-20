@@ -12,7 +12,8 @@ let help = function(ctx,msg,args){
             }
         });
 
-        let text = `__Commands for ${ctx.bot.user.username}__\n\`\`\`\n`
+        let _text = `__Commands for ${ctx.bot.user.username}__\n\`\`\`\n`;
+        let text = _text;
 
         for(let i in groups){
             let g = groups[i];
@@ -27,7 +28,12 @@ let help = function(ctx,msg,args){
 
         msg.channel.createMessage(`${msg.author.mention}, Sending help via DM.`);
         ctx.client.getDMChannel(msg.author.id).then((c)=>{
-            c.createMessage(text+"```");
+            if(text.length > (2000-_text.length-3)){
+                c.createMessage(text.substr(0,2000-_text.length-3)+"```");
+                c.createMessage("```"+text.substr(2000-_text.length-3,text.legnth)+"```");
+            }else{
+                c.createMessage(text+"```");
+            }
         });
     }else{
         if(ctx.cmds.get(args)){

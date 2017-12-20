@@ -22,16 +22,11 @@ module.exports = function(ctx){
             defaultValue: 0,
             allowNull: false,
         },
-        cd_steal: {
-            type: ctx.libs.sequelize.INTEGER,
-            defaultValue: 0,
+        state: {
+            type: ctx.libs.sequelize.STRING,
+            defaultValue: '{"points":3,"jail":0,"grace":0,"regen":0}',
             allowNull: false,
-        },
-        cd_grace: {
-            type: ctx.libs.sequelize.INTEGER,
-            defaultValue: 0,
-            allowNull: false,
-        },
+        }
     });
 
     dbs.taxbanks = ctx.db.define("taxbanks", {
@@ -47,8 +42,32 @@ module.exports = function(ctx){
         },
     });
 
+    dbs.sdata = ctx.db.define("sdata", {
+        id: {
+            type: ctx.libs.sequelize.STRING,
+            unique: true,
+            primaryKey: true
+        },
+        roleme: {
+            type: ctx.libs.sequelize.STRING,
+            defaultValue: "[]",
+            allowNull: false,
+        },
+        logging: {
+            type: ctx.libs.sequelize.BOOLEAN,
+            defaultValue: false,
+            allowNull: false,
+        },
+        allow_snipe: {
+            type: ctx.libs.sequelize.BOOLEAN,
+            defaultValue: true,
+            allowNull: false,
+        },
+    });
+
     dbs.econ.sync({alter: true});
     dbs.taxbanks.sync({alter: true});
+    dbs.sdata.sync({alter:true});
 
     return dbs;
 }

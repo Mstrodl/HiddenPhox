@@ -100,9 +100,9 @@ let me_irl = function(ctx,msg,args){
 
 let poll = function(ctx,msg,args){
     if(!args){
-        msg.channel.createMessage("Usage: hf!poll topic|option 1|option 2|...");
+        msg.channel.createMessage(`Usage: hf!poll "topic" "option 1" "option 2" ...`);
     }else{
-        let opt = args.split("|");
+        let opt = ctx.utils.formatArgs(args);
         let topic = opt[0];
         opt = opt.splice(1,9);
 

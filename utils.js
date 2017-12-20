@@ -44,14 +44,16 @@ utils.awaitMessage = function(ctx,msg,display,callback,timeout) {
 	return regEvent();
 }
 
-utils.lookupUser = function(ctx,msg,str){
+utils.lookupUser = function(ctx,msg,str,global){
+	global = global || false;
+
 	return new Promise((resolve,reject)=>{
 		if(/[0-9]{17,21}/.test(str)){
 			resolve(ctx.bot.requestHandler.request("GET","/users/"+str.match(/[0-9]{17,21}/)[0],true));
 		}
 
 		let userpool = [];
-		if(msg.channel.guild){
+		if(msg.channel.guild && global == false){
 			msg.channel.guild.members.forEach(m=>{
 				if(m.username.toLowerCase().indexOf(str.toLowerCase()) > -1 || m.nick && m.nick.toLowerCase().indexOf(str.toLowerCase()) > -1){
 					if(m.username.toLowerCase() == str.toLowerCase() || m.nick && m.nick.toLowerCase() == str.toLowerCase()){
@@ -166,6 +168,35 @@ utils.createEvent = function(client,type,func,ctx){
 		utils.logWarn(ctx,"Message type not defined, attempting with only passing `msg`");
 		client.on(type,msg=>func(msg,ctx));
 	}
+}
+
+utils.formatArgs = function(str){
+  return str.match(/\\?.|^$/g).reduce((p, c) => {
+    if(c === '"'){
+      p.quote ^= 1;
+    }else if(!p.quote && c === ' '){
+      p.a.push('');
+    }else{
+      p.a[p.a.length-1] += c.replace(/\\(.)/,"$1");
+    }
+    
+    return p;
+  }, {a: ['']}).a
+}
+
+utils.topColor = function(ctx,msg,id){
+	let roles = msg.channel.guild.members.get(id).roles.map(r=>msg.channel.guild.roles.get(r)).filter(r=>r.color);
+	roles.sort((a,b)=>{
+		if(a.position < b.position){
+			return 1;
+		}
+		if(a.position > b.position){
+			return -1;
+		}
+		return 0;
+	});
+
+	return roles[0] && roles[0].color || 0x7289DA;
 }
 
 utils.google = require("./utils/google.js");
