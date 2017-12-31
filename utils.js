@@ -114,7 +114,7 @@ function timeString(){
 	return (h < 10 ? "0"+h : h)+":"+(m < 10 ? "0"+m : m)+":"+(s < 10 ? "0"+s : s);
 }
 
-function safeString(string){
+utils.safeString = function(string){
 	/* the best alternatives for safe strings are here!!!! */
 	string = string.replace("`", "'");
 	string = string.replace("<@", "<@\u200b");
@@ -125,19 +125,19 @@ function safeString(string){
 
 utils.logInfo = function(ctx,string){
 	let time = timeString();
-	string = safeString(string);
+	string = utils.safeString(string);
 	ctx.bot.createMessage(ctx.logid,`:page_facing_up: **[INFO] [${time}]** \`${string}\``);
 }
 
 utils.logWarn = function(ctx,string){
 	let time = timeString();
-	string = safeString(string);
+	string = utils.safeString(string);
 	ctx.bot.createMessage(ctx.logid,`:warning: **[WARN] [${time}]** \`${string}\``);
 }
 
 utils.logError = function(ctx,string){
 	let time = timeString();
-	string = safeString(string);
+	string = utils.safeString(string);
 	ctx.bot.createMessage(ctx.logid,`<:RedTick:349381062054510604> **[ERROR] [${time}]** \`${string}\`\nCC: <@${ctx.ownerid}>`);
 }
 
@@ -179,7 +179,7 @@ utils.formatArgs = function(str){
     }else{
       p.a[p.a.length-1] += c.replace(/\\(.)/,"$1");
     }
-    
+
     return p;
   }, {a: ['']}).a
 }
@@ -200,5 +200,7 @@ utils.topColor = function(ctx,msg,id){
 }
 
 utils.google = require("./utils/google.js");
+
+utils.table = require("./utils/table.js");
 
 module.exports = utils

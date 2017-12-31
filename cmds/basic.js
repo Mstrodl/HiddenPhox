@@ -1,6 +1,5 @@
 let help = function(ctx,msg,args){
-    if(!args){
-        let groups = {"unsorted":{name:"unsorted",cmds:[]}};
+    let groups = {"unsorted":{name:"unsorted",cmds:[]}};
         ctx.cmds.forEach(c=>{
             if(c.group && groups[c.group]){
                 groups[c.group].cmds.push(c);
@@ -12,6 +11,7 @@ let help = function(ctx,msg,args){
             }
         });
 
+    if(!args){
         let _text = `__Commands for ${ctx.bot.user.username}__\n\`\`\`\n`;
         let text = _text;
 
@@ -49,7 +49,20 @@ let help = function(ctx,msg,args){
                 ]
             }});
         }else{
-            msg.channel.createMessage("Command not found.");
+            let cat;
+            for(let i in groups){
+                let g = groups[i];
+                if(g.name.toLowerCase().indexOf(args.toLowerCase()) > -1){
+                    cat = g;
+                }
+            }
+            if(cat && cat.cmds.length > 0){
+                let out = "";
+                cat.cmds.forEach(c=>{out+="  "+c.name+" - "+c.desc+"\n"});
+                msg.channel.createMessage(`\`\`\`Commands for category "${cat.name}":\n${out}\`\`\``);
+            }else{
+                msg.channel.createMessage("Command not found.");
+            }
         }
     }
 }

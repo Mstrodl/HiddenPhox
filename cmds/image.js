@@ -213,7 +213,7 @@ let flop = function(ctx,msg,args){
 let orly = function(ctx,msg,args){
 	msg.channel.sendTyping();
 
-    let [title, text, top, author] = args.split("|")
+    let [title, text, top, author] = ctx.utils.formatArgs(args);
     let img = Math.floor(Math.random()*40)+1;
     let theme = Math.floor(Math.random()*16)+1;
 
@@ -224,7 +224,7 @@ let orly = function(ctx,msg,args){
 	author = author ? author.split("").splice(0,26).join("") : msg.author.username.split("").splice(0,26).join("");
 
     if(!args || !title || !text){
-        msg.channel.createMessage("Usage: `"+ctx.prefix+"orly title|bottom text|top text (optional)|author (optional)`");
+        msg.channel.createMessage("Usage: `"+ctx.prefix+"orly \"title\" \"bottom text\" \"top text\" (optional)\"author\" (optional)`");
     }else{
 		let jimp = ctx.libs.jimp;
         jimp.read(`https://orly-appstore.herokuapp.com/generate?title=${encodeURIComponent(title)}&top_text=${encodeURIComponent(top)}&author=${encodeURIComponent(author)}&image_code=${img}&theme=${theme}&guide_text=${encodeURIComponent(text)}&guide_text_placement=bottom_right`)

@@ -31,7 +31,7 @@ let createEndFunction = function(id,url,type,msg,ctx){
     ctx.vc.get(id).on("warn",console.warn);
 }
 
-let doMusicThingsOk = function(id,url,type,msg,ctx){
+let doMusicThingsOk = async function(id,url,type,msg,ctx){
     if(type == "yt"){
         if(ctx.vc.get(id)){
             let conn = ctx.vc.get(id);
@@ -64,7 +64,7 @@ let doMusicThingsOk = function(id,url,type,msg,ctx){
                 ytdl.getInfo(url, {}, function(err, info) {
                     if(info == null || info.title == null){
                         msg.channel.createMessage(`:musical_note: Now playing: \`${url}\``);
-                        ctx.vc.get(id).np = url;
+                        if(ctx.vc.get(id)) ctx.vc.get(id).np = url;
                     }else{
                         msg.channel.createMessage(`:musical_note: Now playing: \`${info.title}\``);
                         ctx.vc.get(id).np = info.title;
@@ -78,39 +78,30 @@ let doMusicThingsOk = function(id,url,type,msg,ctx){
         if(ctx.vc.get(id)){
             let conn = ctx.vc.get(id);
             if(conn.playing){
-                scdl.getInfo(url, "", {}, function(err, info) {
-                    ctx.vc.get(msg.member.voiceState.channelID).queue.push({url:url,type:"sc",title:info.title})
-                    if(info == null || info.title == null){
-                        msg.channel.createMessage(`:musical_note: Added \`${url}\` to queue.`);
-                    }else{
-                        msg.channel.createMessage(`:musical_note: Added \`${info.title}\` to queue.`);
-                    }
+                let scstream = scdl(url);
+                await scstream.on("info",(info)=>{
+                    ctx.vc.get(msg.member.voiceState.channelID).queue.push({url:url,type:"sc",title:info.title});
+                    msg.channel.createMessage(`:musical_note: Added \`${info.title}\` to queue.`);
                 });
             }else{
-                conn.play(scdl(url,""),{inlineVolume:true});
-                scdl.getInfo(url, "", {}, function(err, info) {
-                    if(info == null || info.title == null){
-                        msg.channel.createMessage(`:musical_note: Now playing: \`${url}\``);
-                        ctx.vc.get(id).np = url;
-                    }else{
-                        msg.channel.createMessage(`:musical_note: Now playing: \`${info.title}\``);
-                        ctx.vc.get(id).np = info.title;
-                    }
+                let scstream = scdl(url);
+                await scstream.on("info",(info)=>{
+                    msg.channel.createMessage(`:musical_note: Now playing: \`${info.title}\``);
+                    if(ctx.vc.get(id)) ctx.vc.get(id).np = info.title;
+
+                    conn.play(info.url,{inlineVolume:true});
                 });
             }
         }else{
-            ctx.bot.joinVoiceChannel(id).then(conn=>{
+            ctx.bot.joinVoiceChannel(id).then(async conn=>{
                 ctx.vc.set(id,conn);
                 ctx.vc.get(id).iwastoldtoleave = false;
-                conn.play(scdl(url,""),{inlineVolume:true});
-                scdl.getInfo(url, "", {}, function(err, info) {
-                    if(info == null || info.title == null){
-                        msg.channel.createMessage(`:musical_note: Now playing: \`${url}\``);
-                        ctx.vc.get(id).np = url;
-                    }else{
-                        msg.channel.createMessage(`:musical_note: Now playing: \`${info.title}\``);
-                        ctx.vc.get(id).np = info.title;
-                    }
+                let scstream = scdl(url);
+                await scstream.on("info",(info)=>{
+                    msg.channel.createMessage(`:musical_note: Now playing: \`${info.title}\``);
+                    if(ctx.vc.get(id)) ctx.vc.get(id).np = info.title;
+
+                    conn.play(info.url,{inlineVolume:true});
                 });
                 createEndFunction(id,url,type,msg,ctx);
             });

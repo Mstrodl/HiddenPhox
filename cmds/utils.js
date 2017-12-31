@@ -15,7 +15,7 @@ let _eval = function(ctx,msg,args){
         let errored = false;
         let out = "";
         try{
-            out = require("util").inspect(eval(args),{depth:0});
+            out = typeof eval(args) == "string" ? eval(args) : require("util").inspect(eval(args),{depth:0});
         }catch(e){
             out = e.message;
             errored = true;
@@ -532,7 +532,7 @@ let setav = function(ctx,msg,args){
     		msg.channel.createMessage("Image not found. Please give URL or attachment.");
     		return;
     	}
-    	
+
     	ctx.libs.request.get(url,function(e,res,body){
 			if(!e && res.statusCode == 200){
 				let data = "data:"+res.headers["content-type"]+";base64,"+new Buffer(body).toString("base64");
@@ -545,6 +545,39 @@ let setav = function(ctx,msg,args){
     }else{
         msg.channel.createMessage("No permission.");
     }
+}
+
+let slist = function(ctx,msg,args){
+    let servers = [];
+
+	ctx.bot.guilds.forEach(s=>{
+		servers.push(s);
+    });
+
+	servers.sort((a,b)=>{
+		if(a.memberCount>b.memberCount) return -1;
+		if(a.memberCount<b.memberCount) return 1;
+		if(a.memberCount==b.memberCount) return 0;
+	});
+
+	let index = 1;
+    if(args) index=parseInt(args);
+
+	let list = [];
+    let page = servers.slice((index-1)*10,(index*10));
+
+	page.map((s,i)=>{
+        let bots = s.members.filter(u=>u.bot).length;
+		list.push({name:((i+1)+((index-1)*10))+". "+s.name,value:`${s.memberCount} members, ${bots} bots (${Math.floor((bots/s.memberCount)*100)}%)\n${s.channels.size} channels, ${s.roles.size} roles`,inline:true});
+    });
+
+    msg.channel.createMessage({embed:{
+        title:"Server List",
+        fields:list,
+        footer:{
+            text:`Page ${index} of ${Math.floor(ctx.bot.guilds.size/10)} | ${ctx.bot.guilds.size} total servers`
+        }
+    }});
 }
 
 module.exports = [
@@ -640,5 +673,11 @@ module.exports = [
         desc:"Converts a Discord snowflake to a readable time.",
         func:cflake,
         group:"utils"
-    }
+    },
+    {
+        name:"slist",
+        desc:"Server list of servers HiddenPhox is in.",
+        func:slist,
+        group:"utils"
+    },
 ]
