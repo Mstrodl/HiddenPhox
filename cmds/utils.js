@@ -13,9 +13,9 @@ let elevated = [
 let _eval = function(ctx,msg,args){
     if(msg.author.id === ctx.ownerid || elevated.includes(msg.author.id)){
         let errored = false;
-        let out = "";
+        let out = eval(args);
         try{
-            out = typeof eval(args) == "string" ? eval(args) : require("util").inspect(eval(args),{depth:0});
+            out = typeof out == "string" ? out : require("util").inspect(out,{depth:0});
         }catch(e){
             out = e.message;
             errored = true;
@@ -386,15 +386,33 @@ let uinfo = function(ctx,msg,args){
 }
 
 let sinfo = function(ctx,msg,args){
+    let flags = {
+        "eu-central":":flag_eu:",
+        "london":":flag_gb:",
+        "amsterdam":":flag_nl:",
+        "japan":":flag_jp:",
+        "brazil":"<:lunahahayes:383962711274291200>",
+        "us-west":":hamburger:",
+        "hongkong":":flag_hk:",
+        "sydney":":flag_au:",
+        "singapore":":flag_sg:",
+        "us-central":":hamburger:",
+        "eu-west":":flag_eu:",
+        "us-south":":cowboy:",
+        "us-east":":man::skin-tone-5:",
+        "frankfurt":":flag_de:",
+        "russia":":flag_ru:"
+    }
+
     if(msg.channel.guild){
         let g = msg.channel.guild;
 
-        let bots = 0;
-        g.members.forEach(m=>{if(m.bot) ++bots;});
+        let humans = g.members.filter(u=>!u.bot).length;
+        let bots = g.members.filter(u=>u.bot).length;
 
         let emojis = [];
         g.emojis.forEach(e=>{
-            emojis.push("<:a:"+e.id+">")
+            emojis.push(`<${e.animated ? "a" : ""}:z:${e.id}>`)
         });
 
         let info = {
@@ -403,13 +421,15 @@ let sinfo = function(ctx,msg,args){
             fields:[
                 {name:"ID",value:g.id,inline:true},
                 {name:"Owner",value:`<@${g.ownerID}>`,inline:true},
-                {name:"Members",value:g.memberCount,inline:true},
-                {name:"Bots",value:bots+" ("+Math.floor((bots/g.memberCount)*100)+"% of members)",inline:true},
+                {name:"Total Members",value:g.memberCount,inline:true},
+                {name:"Humans",value:`${humans} (${Math.round((humans/g.memberCount)*100)}% of members)`,inline:true},
+                {name:"Bots",value:`${bots} (${Math.round((bots/g.memberCount)*100)}% of members)`,inline:true},
                 {name:"Channels",value:g.channels.size,inline:true},
-                {name:"Region",value:g.region,inline:true},
+                {name:"Region",value:(flags[g.region] || ":flag_black:")+" "+(g.region || "Unknown Region???"),inline:true},
                 {name:"Shard",value:g.shard.id,inline:true},
                 {name:"Roles",value:g.roles.size,inline:true},
                 {name:"Emoji Count",value:g.emojis.length,inline:true},
+                {name:"Created At",value:new Date(g.createdAt).toUTCString(),inline:true},
                 {name:"Icon",value:"[Full Size](https://cdn.discordapp.com/icons/"+g.id+"/"+g.icon+".png?size=1024)",inline:true},
             ],
             thumbnail:{
@@ -417,16 +437,32 @@ let sinfo = function(ctx,msg,args){
             }
         };
 
+        if(g.features.length > 0){
+            info.fields.push({name:"Flags",value:`\`\`\`${g.features.join(", ")}\`\`\``,inline:true});
+        }
+
         if(emojis.length > 0){
             info.fields.push({name:"Emojis (1-25)",value:emojis.slice(0,25).join(" "),inline:true});
         }
 
         if(emojis.length > 25){
-            info.fields.push({name:"Emojis (26-"+emojis.length+")",value:emojis.slice(26).join(" "),inline:true});
+            info.fields.push({name:"Emojis (26-50)",value:emojis.slice(25,50).join(" "),inline:true});
         }
 
-        if(g.features.length > 0){
-            info.fields.push({name:"Flags",value:`\`\`\`${g.features.join(", ")}\`\`\``,inline:true});
+        if(emojis.length > 50){
+            info.fields.push({name:"Emojis (51-75)",value:emojis.slice(50,75).join(" "),inline:true});
+        }
+
+        if(emojis.length > 75){
+            info.fields.push({name:"Emojis (76-100)",value:emojis.slice(75,100).join(" "),inline:true});
+        }
+
+        if(emojis.length > 100){
+            info.fields.push({name:"Emojis (101-150)",value:emojis.slice(100,150).join(" "),inline:true});
+        }
+
+        if(emojis.length > 150){
+            info.fields.push({name:"Emojis (151-200+)",value:emojis.slice(150).join(" "),inline:true});
         }
 
         msg.channel.createMessage({embed:info});

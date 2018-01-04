@@ -21,6 +21,7 @@
   "homepage": "https://github.com/LUModder/FlexBot#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
+    "colorcolor": "^1.1.1",
     "eris": "github:abalabahaha/eris#dev",
     "expr-eval": "^1.0.1",
     "google": "^2.1.0",

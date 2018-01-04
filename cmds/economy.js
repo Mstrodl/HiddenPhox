@@ -43,7 +43,11 @@ let top = async function(ctx,msg,args){
         let _list = [];
         for(let i = 0;i < list.length;i++){
             let u = ctx.bot.users.get(list[i].id);
-            _list.push(`${i+1}. ${u.username}#${u.discriminator} - ${list[i].currency}FC`);
+            if(u){
+                _list.push(`${i+1}. ${u.username}#${u.discriminator} - ${list[i].currency}FC`);
+            }else{
+                _list.push(`${i+1}. Uncached (${list[i].id}) - ${list[i].currency}FC`);
+            }
         }
 
         msg.channel.createMessage(`__**Top 10 People with Most PhoxCoins [Global]**__\`\`\`\n${_list.join("\n")}\`\`\``);
@@ -94,7 +98,11 @@ let top = async function(ctx,msg,args){
         let _list = [];
         for(let i = 0;i < list.length;i++){
             let g = ctx.bot.guilds.get(list[i].id);
-            _list.push(`${i+1}. ${g.name} - ${list[i].currency}FC`);
+            if(g){
+                _list.push(`${i+1}. ${g.name} - ${list[i].currency}FC`);
+            }else{
+                _list.push(`${i+1}. Uncached/Left (${list[i].id}) - ${list[i].currency}FC`);
+            }
         }
 
         msg.channel.createMessage(`__**Top 10 Taxbanks**__\`\`\`\n${_list.join("\n")}\`\`\``);

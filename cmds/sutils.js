@@ -1,7 +1,7 @@
 let snipe = async function(ctx,msg,args){
     let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
     let canSnipe = data[0].dataValues.allow_snipe;
-    
+
     if(!msg.channel.guild){
         msg.channel.createMessage("Not in a guild.");
     }else if(!ctx.snipes.get(msg.channel.id)){
@@ -233,19 +233,19 @@ let sconfig = async function(ctx,msg,args){
         msg.channel.createMessage("You do not have `Manage Server` permission.");
         return;
     }
-    
+
     let keys = [
         {name:"logging",desc:"[WIP] Enable server logging to a channel",type:"boolean"},
         {name:"logchan",desc:"[WIP] Server logging channel ID",type:"string"},
         {name:"allow_snipe",desc:"Allow sniping of deleted and edited messages",type:"boolean"}
     ]
-  
+
     args = args.split(" ");
-    
+
     let cmd = args[0];
     let key = args[1];
     let val = args[2];
-    
+
     if(cmd == "set"){
         if(!key){
             msg.channel.createMessage("No key given.");
@@ -255,15 +255,15 @@ let sconfig = async function(ctx,msg,args){
             msg.channel.createMessage("No value given.");
             return;
         }
-        
+
         if(keys.find(k=>k.name == val) == "undefined"){
             msg.channel.createMessage(`Cannot find specified key \`${key}\`. Do \`${ctx.prefix}config list\` for valid keys.`);
             return;
         }
-        
+
         let data = {};
         data[key] = val;
-        
+
         try{
             await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
             await ctx.db.models.sdata.update(data,{where:{id:msg.channel.guild.id}});
@@ -278,56 +278,179 @@ let sconfig = async function(ctx,msg,args){
             msg.channel.createMessage("No key given.");
             return;
         }
-        
+
         let isKey = keys.map(k=>k.name == val)[0];
         if(!isKey){
             msg.channel.createMessage(`Cannot find specified key \`${key}\`. Do \`${prefix}config list\` for valid keys.`);
             return;
         }
-        
+
         let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
-        
+
         msg.channel.createMessage(`Key \`${key}\` has value \`${data[0].dataValues[key]}\`.`);
     }else if(cmd == "list"){
         let data = [];
         keys.map(k=>data.push(`${k.type} | ${k.name} | ${k.desc}`));
-        
+
         msg.channel.createMessage(`__Config Options__\n\`\`\`\n${data.join("\n")}\n\`\`\``);
     }else{
         msg.channel.createMessage("__**Subcommands for config**__\n  set - Set value\n  get - Get value\n  list - List all possible keys");
     }
 }
 
+let kick = function(ctx,msg,args){
+    if(!args){
+        msg.channel.createMessage(`Usage: ${ctx.prefix}kick <user> [reason]`);
+    }else{
+        if(!msg.channel.permissionsOf(msg.author.id).has("kickMembers")){
+            msg.channel.createMessage("You do not have `Kick Members` permission.");
+            return;
+        }
+        if(!msg.channel.permissionsOf(ctx.bot.user.id).has("kickMembers")){
+            msg.channel.createMessage("I do not have `Kick Members` permission.");
+            return;
+        }
+
+        args = ctx.utils.formatArgs(args);
+        let user = args[0];
+        let reason = args.splice(1,args.length).join(" ");
+
+        ctx.utils.lookupUser(ctx,msg,user || "")
+        .then(u=>{
+            try{
+                ctx.bot.kickGuildMember(msg.channel.guild.id,u.id,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
+                msg.channel.createMessage(":ok_hand:");
+            }catch(e){
+                msg.channel.createMessage(`Could not kick:\n\`\`\`\n${e.message}\n\`\`\``);
+                ctx.utils.logWarn(ctx,"[kick] "+e.message);
+            }
+        }).catch(m=>{
+            if(m == "No results." || m == "Canceled"){
+                msg.channel.createMessage(m);
+            }
+        });
+    }
+}
+
+let ban = function(ctx,msg,args){
+    if(!args){
+        msg.channel.createMessage(`Usage: ${ctx.prefix}ban <user> [reason]`);
+    }else{
+        if(!msg.channel.permissionsOf(msg.author.id).has("banMembers")){
+            msg.channel.createMessage("You do not have `Ban Members` permission.");
+            return;
+        }
+        if(!msg.channel.permissionsOf(ctx.bot.user.id).has("banMembers")){
+            msg.channel.createMessage("I do not have `Ban Members` permission.");
+            return;
+        }
+
+        args = ctx.utils.formatArgs(args);
+        let user = args[0];
+        let reason = args.splice(1,args.length).join(" ");
+
+        ctx.utils.lookupUser(ctx,msg,user || "")
+        .then(u=>{
+            try{
+                ctx.bot.banGuildMember(msg.channel.guild.id,u.id,0,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
+                msg.channel.createMessage(":ok_hand:");
+            }catch(e){
+                msg.channel.createMessage(`Could not ban:\n\`\`\`\n${e.message}\n\`\`\``);
+                ctx.utils.logWarn(ctx,"[ban] "+e.message);
+            }
+        }).catch(m=>{
+            if(m == "No results." || m == "Canceled"){
+                msg.channel.createMessage(m);
+            }
+        });
+    }
+}
+
+let unban = function(ctx,msg,args){
+    if(!args){
+        msg.channel.createMessage(`Usage: ${ctx.prefix}ban <user> [reason]`);
+    }else{
+        if(!msg.channel.permissionsOf(msg.author.id).has("banMembers")){
+            msg.channel.createMessage("You do not have `Ban Members` permission.");
+            return;
+        }
+        if(!msg.channel.permissionsOf(ctx.bot.user.id).has("banMembers")){
+            msg.channel.createMessage("I do not have `Ban Members` permission.");
+            return;
+        }
+
+        args = ctx.utils.formatArgs(args);
+        let user = args[0];
+        let reason = args.splice(1,args.length).join(" ");
+
+        ctx.utils.lookupUser(ctx,msg,user || "")
+        .then(u=>{
+            try{
+                ctx.bot.unbanGuildMember(msg.channel.guild.id,u.id,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
+                msg.channel.createMessage(":ok_hand:");
+            }catch(e){
+                msg.channel.createMessage(`Could not unban:\n\`\`\`\n${e.message}\n\`\`\``);
+                ctx.utils.logWarn(ctx,"[unban] "+e.message);
+            }
+        }).catch(m=>{
+            if(m == "No results." || m == "Canceled"){
+                msg.channel.createMessage(m);
+            }
+        });
+    }
+}
+
 module.exports = [
-  {
-      name:"snipe",
-      desc:"Snipe recently deleted messages.",
-      func:snipe,
-      group:"Server Utils"
-  },
-  {
-      name:"esnipe",
-      desc:"Snipe recently edited messages.",
-      func:esnipe,
-      group:"Server Utils"
-  },
-  {
-      name:"dehoist",
-      desc:"Dehoist a user's name or nickname.",
-      func:dehoist,
-      group:"Server Utils"
-  },
-  {
-      name:"roleme",
-      desc:"Allow users to get set roles on your server.",
-      func:roleme,
-      group:"Server Utils"
-  },
-  {
-      name:"config",
-      desc:"Configure server specific values of HiddenPhox.",
-      func:sconfig,
-      group:"Server Utils",
-      usage:"<subcommand> [key] [value]"
-  }
+    {
+        name:"snipe",
+        desc:"Snipe recently deleted messages.",
+        func:snipe,
+        group:"Server Utils"
+    },
+    {
+        name:"esnipe",
+        desc:"Snipe recently edited messages.",
+        func:esnipe,
+        group:"Server Utils"
+    },
+    {
+        name:"dehoist",
+        desc:"Dehoist a user's name or nickname.",
+        func:dehoist,
+        group:"Server Utils"
+    },
+    {
+        name:"roleme",
+        desc:"Allow users to get set roles on your server.",
+        func:roleme,
+        group:"Server Utils"
+    },
+    {
+        name:"config",
+        desc:"Configure server specific values of HiddenPhox.",
+        func:sconfig,
+        group:"Server Utils",
+        usage:"<subcommand> [key] [value]"
+    },
+    {
+        name:"kick",
+        desc:"Kick a user.",
+        func:kick,
+        group:"Server Utils",
+        usage:"<user> [reason]"
+    },
+    {
+        name:"ban",
+        desc:"Ban a user. (can hackban)",
+        func:ban,
+        group:"Server Utils",
+        usage:"<user> [reason]"
+    },
+    {
+        name:"unban",
+        desc:"Unban a user.",
+        func:unban,
+        group:"Server Utils",
+        usage:"<user> [reason]"
+    }
 ]
