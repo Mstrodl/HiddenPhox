@@ -18,7 +18,7 @@ let help = function(ctx,msg,args){
         for(let i in groups){
             let g = groups[i];
 
-            if(g.cmds.length>0){
+            if(g.cmds.length>0 && g.name.toLowerCase() != "guild specific"){
                 text=text+g.name.charAt(0).toUpperCase()+g.name.slice(1)+":\n";
                 g.cmds.forEach(c=>{
                     text=text+"  "+c.name+" - "+c.desc+"\n";
@@ -35,19 +35,33 @@ let help = function(ctx,msg,args){
                 c.createMessage(text+"```");
             }
         });
+    }else if(args == "guild"){
+        let gcmds = ctx.cmds.filter(c=>c.guild && msg.channel.guild && c.guild == msg.channel.guild.id);
+
+        if(gcmds && gcmds.length > 0){
+            let out = "";
+            gcmds.forEach(c=>{out+="  "+c.name+" - "+c.desc+"\n"});
+            msg.channel.createMessage(`\`\`\`Guild specific commands:\n${out}\`\`\``);
+        }else{
+            msg.channel.createMessage("No guild specific commands found.");
+        }
     }else{
         if(ctx.cmds.get(args)){
             let c = ctx.cmds.get(args);
 
-            msg.channel.createMessage({embed:{
-                color:0xEB0763,
+            let embed = {
+                color:0x4F586C,
                 title:"Command info: "+c.name,
                 fields:[
                     {name:"Description",value:c.desc,inline:true},
                     {name:"Group",value:c.group.charAt(0).toUpperCase()+c.group.slice(1),inline:true},
                     {name:"Usage",value:`${ctx.prefix}${c.name} `+(c.usage ? c.usage : ""),inline:true},
                 ]
-            }});
+            };
+
+            if(c.aliases) embed.fields.push({name:"Aliases",value:c.aliases.join(", "),inline:true});
+
+            msg.channel.createMessage({embed:embed});
         }else{
             let cat;
             for(let i in groups){
@@ -56,6 +70,12 @@ let help = function(ctx,msg,args){
                     cat = g;
                 }
             }
+
+            if(cat.name.toLowerCase() == "guild specific"){
+                msg.channel.createMessage("lol no.");
+                return;
+            }
+
             if(cat && cat.cmds.length > 0){
                 let out = "";
                 cat.cmds.forEach(c=>{out+="  "+c.name+" - "+c.desc+"\n"});
@@ -128,7 +148,8 @@ module.exports = [
         name:"ping",
         desc:"Pong",
         func:ping,
-        group:"general"
+        group:"general",
+        aliases:["p"]
     },
     {
         name:"stats",
@@ -140,7 +161,8 @@ module.exports = [
         name:"invite",
         desc:"Get bot invite.",
         func:invite,
-        group:"general"
+        group:"general",
+        aliases:["inv"]
     },
     {
         name:"help",
@@ -153,6 +175,7 @@ module.exports = [
         name:"about",
         desc:"Displays bot info",
         func:info,
-        group:"general"
+        group:"general",
+        aliases:["info"]
     }
 ]

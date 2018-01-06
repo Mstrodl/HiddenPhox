@@ -135,6 +135,7 @@ for(let f of files){
 client.on("messageCreate",msg=>{
 	if(msg.author && !msg.author.bot){
 		let prefix = ctx.prefix;
+		let hasRan = false;
 
 		let [cmd, ...args] = msg.content.split(" ");
 
@@ -142,6 +143,7 @@ client.on("messageCreate",msg=>{
 
 		ctx.cmds.forEach(c=>{
 			if(cmd == prefix+c.name){
+				if(c.guild && msg.channel.guild && c.guild != msg.channel.guild.id) return;
 				try{
 					c.func(ctx,msg,args.join(" "));
 					ctx.utils.logInfo(ctx,`'${msg.author.username}' (${msg.author.id}) ran command '${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' in '#${msg.channel.name ? msg.channel.name : msg.channel.id}' on '${msg.channel.guild ? msg.channel.guild.name : "DMs"}'${msg.channel.guild ? " ("+msg.channel.guild.id+")" : ""}`);
@@ -149,8 +151,21 @@ client.on("messageCreate",msg=>{
 					msg.channel.createMessage(":warning: An error occured.\n```\n"+e.message+"\n```");
 					ctx.utils.logWarn(ctx,`'${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' errored with '${e.message}'`);
 				}
+				hasRan = true;
 			}
-		})
+
+			if(c.aliases && (cmd == prefix+c.name || cmd == prefix+c.aliases.find(a=>a==cmd.replace(prefix,""))) && !hasRan){
+				if(c.guild && msg.channel.guild && c.guild != msg.channel.guild.id) return;
+				try{
+					c.func(ctx,msg,args.join(" "));
+					ctx.utils.logInfo(ctx,`'${msg.author.username}' (${msg.author.id}) ran guild command '${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' in '#${msg.channel.name ? msg.channel.name : msg.channel.id}' on '${msg.channel.guild ? msg.channel.guild.name : "DMs"}'${msg.channel.guild ? " ("+msg.channel.guild.id+")" : ""}`);
+				}catch(e){
+					msg.channel.createMessage(":warning: An error occured.\n```\n"+e.message+"\n```");
+					ctx.utils.logWarn(ctx,`'${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' errored with '${e.message}'`);
+				}
+				hasRan = true;
+			}
+		});
 	}
 });
 

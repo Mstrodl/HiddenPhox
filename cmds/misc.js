@@ -126,6 +126,18 @@ let poll = function(ctx,msg,args){
     }
 }
 
+let vote = function(ctx,msg,args){
+    if(!args){
+        msg.channel.createMessage(`Usage: hf!vote topic`);
+    }else{
+        msg.channel.createMessage(`**${msg.author.username}#${msg.author.discriminator}** has started a vote:\n**__${args}__**\n<:GreenTick:349381062176145408>: Yes\n<:RedTick:349381062054510604>: No`)
+        .then(m=>{
+            m.addReaction(":GreenTick:349381062176145408");
+            setTimeout(()=>m.addReaction(":RedTick:349381062176145408"),750);
+        });
+    }
+}
+
 module.exports = [
     {
         name:"calc",
@@ -143,7 +155,8 @@ module.exports = [
         name:"google",
         desc:"Search Google.",
         func:search,
-        group:"misc"
+        group:"misc",
+        aliases:["g","search"]
     },
     {
         name:"gimg",
@@ -159,8 +172,14 @@ module.exports = [
     },
     {
         name:"poll",
-        desc:"Start a poll for other users to vote on",
+        desc:"Start a poll with multiple options.",
         func:poll,
+        group:"fun"
+    },
+    {
+        name:"vote",
+        desc:"Start a yes/no vote",
+        func:vote,
         group:"fun"
     }
 ]

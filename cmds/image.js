@@ -261,7 +261,30 @@ let colsquare = function(ctx,msg,args){
 
 let color = function(ctx,msg,args){
 	if(args){
-		if(/(\d{1,3}),(\d{1,3}),(\d{1,3})/.test(args)){
+		if(/\d{1,8}/.test(args)){
+			let int = parseInt(args.match(/\d{1,8}/)[0]);
+			if(int > 0xFFFFFF) int = 0xFFFFFF;
+
+			let hex = int.toString("16");
+			let col = c2c(`#${hex}`,"hex").replace("#","");
+
+			let im = new jimp(128,128,parseInt(`0x${col}FF`));
+			im.getBuffer(jimp.MIME_PNG,(e,f)=>{
+				msg.channel.createMessage({embed:{
+					color:parseInt("0x"+col),
+					fields:[
+						{name:"Hex",value:c2c(`#${col}`,"hex"),inline:true},
+						{name:"RGB",value:c2c(`#${col}`,"rgb"),inline:true},
+						{name:"HSL",value:c2c(`#${col}`,"hsl"),inline:true},
+						{name:"HSV",value:c2c(`#${col}`,"hsv"),inline:true},
+						{name:"Integer",value:parseInt(`0x${col}`),inline:true}
+					],
+					thumbnail:{
+						url:`attachment://${col}.png`
+					}
+				}},{name:`${col}.png`,file:f});
+			});
+		}else if(/(\d{1,3}),(\d{1,3}),(\d{1,3})/.test(args)){
 			let rgb = args.match(/(\d{1,3}),(\d{1,3}),(\d{1,3})/);
 			let col = c2c(`rgb(${rgb[0]})`,"hex").replace("#","");
 
@@ -274,14 +297,15 @@ let color = function(ctx,msg,args){
 						{name:"RGB",value:c2c(`#${col}`,"rgb"),inline:true},
 						{name:"HSL",value:c2c(`#${col}`,"hsl"),inline:true},
 						{name:"HSV",value:c2c(`#${col}`,"hsv"),inline:true},
+						{name:"Integer",value:parseInt(`0x${col}`),inline:true}
 					],
 					thumbnail:{
 						url:`attachment://${col}.png`
 					}
 				}},{name:`${col}.png`,file:f});
 			});
-		}else if(/[0-9a-fA-F]{3,6}/.test(args)){
-			let hex = args.replace("#","").match(/[0-9a-fA-F]{3,6}/)[0];
+		}else if(/#[0-9a-fA-F]{3,6}/.test(args)){
+			let hex = args.match(/#[0-9a-fA-F]{3,6}/)[0].replace("#","");
 			let col = c2c(`#${hex}`,"hex").replace("#","");
 
 			let im = new jimp(128,128,parseInt(`0x${col}FF`));
@@ -293,6 +317,7 @@ let color = function(ctx,msg,args){
 						{name:"RGB",value:c2c(`#${col}`,"rgb"),inline:true},
 						{name:"HSL",value:c2c(`#${col}`,"hsl"),inline:true},
 						{name:"HSV",value:c2c(`#${col}`,"hsv"),inline:true},
+						{name:"Integer",value:parseInt(`0x${col}`),inline:true}
 					],
 					thumbnail:{
 						url:`attachment://${col}.png`
@@ -315,6 +340,7 @@ let color = function(ctx,msg,args){
 						{name:"RGB",value:c2c(`#${col}`,"rgb"),inline:true},
 						{name:"HSL",value:c2c(`#${col}`,"hsl"),inline:true},
 						{name:"HSV",value:c2c(`#${col}`,"hsv"),inline:true},
+						{name:"Integer",value:parseInt(`0x${col}`),inline:true}
 					],
 					thumbnail:{
 						url:`attachment://${col}.png`
@@ -410,12 +436,12 @@ module.exports = [
         func:colsquare,
         group:"image"
 	},
-
 	{
         name:"color",
         desc:"Display a color",
         func:color,
 		group:"image",
-		usage:"[rgb or hex]"
+		usage:"[rgb or hex]",
+		aliases:["col"]
 	},
 ]

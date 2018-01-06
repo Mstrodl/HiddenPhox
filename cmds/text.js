@@ -180,24 +180,28 @@ module.exports = [
         name:"dancesay",
         desc:"hey its that dancing letter meme",
         func:dancesay,
-        group:"text"
+        group:"text",
+        aliases:["dsay","ds"]
     },
     {
         name:"fullwidth",
         desc:"\uFF41\uFF45\uFF53\uFF54\uFF48\uFF45\uFF54\uFF49\uFF43\u3000\uFF54\uFF45\uFF58\uFF54",
         func:fullwidth,
-        group:"text"
+        group:"text",
+        aliases:["fw"]
     },
     {
         name:"bunnysay",
         desc:"Make a bunny say things",
         func:bunnysay,
-        group:"text"
+        group:"text",
+        aliases:["bunsay"]
     },
     {
         name:"bubblesay",
         desc:"Just don't let them pop",
         func:bubblesay,
-        group:"text"
+        group:"text",
+        aliases:["bsay"]
     }
 ]

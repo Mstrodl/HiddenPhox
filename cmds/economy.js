@@ -497,7 +497,8 @@ module.exports = [
         desc:"Check your PhoxBank:tm: balance",
         func:wallet,
         group:"economy",
-        usage:"[user]"
+        usage:"[user]",
+        aliases:["bal","balance","coins"]
     },
     {
         name:"top",
