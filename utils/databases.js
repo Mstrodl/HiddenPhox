@@ -40,6 +40,11 @@ module.exports = function(ctx){
             defaultValue: 0,
             allowNull: false,
         },
+        cooldown: {
+            type: ctx.libs.sequelize.INTEGER,
+            defaultValue: 0,
+            allowNull: false,
+        }
     });
 
     dbs.sdata = ctx.db.define("sdata", {
@@ -64,6 +69,36 @@ module.exports = function(ctx){
             allowNull: false,
         },
     });
+
+    dbs.memework = {};
+
+    dbs.memework.modvote = ctx.db.define("mw_modvote",{
+        voteid: {
+            type: ctx.libs.sequelize.INTEGER,
+            unique: true,
+            primaryKey: true
+        },
+        creator: {
+            type: ctx.libs.sequelize.STRING,
+            defaultValue: "",
+            allowNull: false,
+        },
+        msgid: {
+            type: ctx.libs.sequelize.STRING,
+            defaultValue: "",
+            allowNull: false,
+        },
+        topic: {
+            type: ctx.libs.sequelize.STRING,
+            defaultValue: "",
+            allowNull: false,
+        },
+        data: {
+            type: ctx.libs.sequelize.JSON,
+            defaultValue: "",
+            allowNull: false,
+        },
+    })
 
     dbs.econ.sync({alter: true});
     dbs.taxbanks.sync({alter: true});

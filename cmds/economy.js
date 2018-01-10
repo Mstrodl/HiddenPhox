@@ -12,8 +12,17 @@ let account = async function(ctx,msg,args){
     }
 }
 
-let wallet = function(ctx,msg,args){
-    ctx.utils.lookupUser(ctx,msg,args || msg.author.mention)
+let wallet = async function(ctx,msg,args){
+    let accounts = await ctx.db.models.econ.findAll();
+
+    let filter = function(m){
+        for(let i=0;i<accounts.length;i++){
+            let acc = accounts[i];
+            if(m.id == acc.id) return m;
+        }
+    }
+
+    ctx.utils.lookupUser(ctx,msg,args || msg.author.mention,filter)
     .then(async (u)=>{
         let wallet = await ctx.db.models.econ.findOne({where:{id:u.id}});
         if(wallet){
@@ -188,29 +197,29 @@ let slots = async function(ctx,msg,args){
             //old code cause lazy :^)
             let res = "";
 
-        	let s = [
-        		[],
-        		[],
-        		[]
+            let s = [
+                [],
+                [],
+                []
             ];
 
-        	for(let i=0;i<3;i++){
-        		let rnd = Math.floor(Math.random()*semoji.length)
-        		s[i] = []
+            for(let i=0;i<3;i++){
+                let rnd = Math.floor(Math.random()*semoji.length)
+                s[i] = []
                 s[i][0] = rnd==0 ? semoji[semoji.length-1] : semoji[rnd-1];
-        		s[i][1] = semoji[rnd];
-        		s[i][2] = rnd==semoji.length-1 ? semoji[0] : semoji[rnd+1];
+                s[i][1] = semoji[rnd];
+                s[i][2] = rnd==semoji.length-1 ? semoji[0] : semoji[rnd+1];
             }
 
-        	res+=":black_large_square:"+s[0][0]+s[1][0]+s[2][0]+":black_large_square:";
-        	res+="\n:arrow_forward:"+s[0][1]+s[1][1]+s[2][1]+":arrow_backward:";
-        	res+="\n:black_large_square:"+s[0][2]+s[1][2]+s[2][2]+":black_large_square:";
+            res+=":black_large_square:"+s[0][0]+s[1][0]+s[2][0]+":black_large_square:";
+            res+="\n:arrow_forward:"+s[0][1]+s[1][1]+s[2][1]+":arrow_backward:";
+            res+="\n:black_large_square:"+s[0][2]+s[1][2]+s[2][2]+":black_large_square:";
 
-        	if(s[0][1] == s[1][1] && s[1][1] == s[2][1]){
-        		res+=`\n\nYou won **${value*2}FC**.`;
-        		ctx.db.models.econ.update({currency:acc.currency+(value*2)},{where:{id:msg.author.id}});
-        	}else{
-        		res+="\n\nSorry, you lost.";
+            if(s[0][1] == s[1][1] && s[1][1] == s[2][1]){
+                res+=`\n\nYou won **${value*2}FC**.`;
+                ctx.db.models.econ.update({currency:acc.currency+(value*2)},{where:{id:msg.author.id}});
+            }else{
+                res+="\n\nSorry, you lost.";
             }
 
             if(rl){
@@ -220,7 +229,7 @@ let slots = async function(ctx,msg,args){
                 ctx.ratelimits.set(msg.author.id,{slots:new Date().getTime()+15000});
             }
 
-        	msg.channel.createMessage(res);
+            msg.channel.createMessage(res);
         }
     }else{
         msg.channel.createMessage("No account found.");
@@ -252,12 +261,21 @@ let transfer = async function(ctx,msg,args){
         return;
     }
 
+    let accounts = await ctx.db.models.econ.findAll();
+
+    let filter = function(m){
+        for(let i=0;i<accounts.length;i++){
+            let acc = accounts[i];
+            if(m.id == acc.id) return m;
+        }
+    }
+
     let acc = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
     if(acc){
         let u;
 
         try{
-            u = await ctx.utils.lookupUser(ctx,msg,owo[0] || msg.author.mention);
+            u = await ctx.utils.lookupUser(ctx,msg,owo[0] || msg.author.mention,filter);
         }catch(e){
             msg.channel.createMessage(e);
         }
@@ -310,7 +328,7 @@ let transfer = async function(ctx,msg,args){
 let jail = async function(ctx,user){
     let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
     let state = JSON.parse(data.state);
-    let a = state
+    let a = state;
 
     a.jail = new Date().getTime()+(8*60*60*1000);
 
@@ -352,6 +370,8 @@ let takepoint = async function(ctx,user){
 }
 
 let steal = async function(ctx,msg,args){
+    msg.channel.sendTyping();
+
     args = ctx.utils.formatArgs(args);
     let user = args[0];
     let amt = parseInt(args[1] || 0);
@@ -366,7 +386,16 @@ let steal = async function(ctx,msg,args){
         return;
     }
 
-    ctx.utils.lookupUser(ctx,msg,user || "")
+    let accounts = await ctx.db.models.econ.findAll();
+
+    let filter = function(m){
+        for(let i=0;i<accounts.length;i++){
+            let acc = accounts[i];
+            if(m.id == acc.id) return m;
+        }
+    }
+
+    ctx.utils.lookupUser(ctx,msg,user || "",filter)
     .then(async u=>{
         let tdata = await ctx.db.models.econ.findOne({where:{id:u.id}});
         let udata = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
@@ -484,6 +513,40 @@ let sstate = async function(ctx,msg,args){
 }
 
 /* End Steal Code Stuffs */
+
+/* Start Heist Code Stuffs */
+
+let doHeist = function(ctx,data){
+    
+}
+
+let heist = async function(ctx,msg,args){
+    args = ctx.utils.formatArgs(args);
+    let dbdata = await ctx.db.models.taxbanks.findOrCreate({where:{id:msg.channel.guild.id}});
+    let data = {};
+
+    let udata = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
+
+    //get guild via lookup
+    //  do checks before continuing
+    //    - cooldown/grace
+    //    - if owner has money
+    //    - if guild has a taxbank (handled by lookup filtering already)
+    //    - amount wanted to be stolen is enough
+    //  make heist open
+    //    setup heist collection object with guild, target,
+    //  wait for people to join and either wait x minutes (15?) or call start subcommand
+    //    - check if people have min amount of FC
+
+    //when started
+    //  do maths
+    //  rng jails
+    //  divide out money
+    //  destroy collection
+    //  apply cooldown and grace
+}
+
+/* End Heist Code Stuffs */
 
 module.exports = [
     {

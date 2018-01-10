@@ -133,7 +133,7 @@ let vote = function(ctx,msg,args){
         msg.channel.createMessage(`**${msg.author.username}#${msg.author.discriminator}** has started a vote:\n**__${args}__**\n<:GreenTick:349381062176145408>: Yes\n<:RedTick:349381062054510604>: No`)
         .then(m=>{
             m.addReaction(":GreenTick:349381062176145408");
-            setTimeout(()=>m.addReaction(":RedTick:349381062176145408"),750);
+            setTimeout(()=>m.addReaction(":RedTick:349381062054510604"),750);
         });
     }
 }

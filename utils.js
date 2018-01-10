@@ -44,16 +44,25 @@ utils.awaitMessage = function(ctx,msg,display,callback,timeout) {
 	return regEvent();
 }
 
-utils.lookupUser = function(ctx,msg,str,global){
-	global = global || false;
-
+utils.lookupUser = function(ctx,msg,str,filter){
 	return new Promise((resolve,reject)=>{
 		if(/[0-9]{17,21}/.test(str)){
 			resolve(ctx.bot.requestHandler.request("GET","/users/"+str.match(/[0-9]{17,21}/)[0],true));
 		}
 
 		let userpool = [];
-		if(msg.channel.guild && global == false){
+		if(filter){
+			let f = ctx.bot.users.filter(filter);
+			f.forEach(m=>{
+				if(m.username.toLowerCase().indexOf(str.toLowerCase()) > -1){
+					if(m.username.toLowerCase() == str.toLowerCase()){
+						userpool = [m];
+					}else{
+						userpool.push(m);
+					}
+				}
+			});
+		}else if(msg.channel.guild && !filter){
 			msg.channel.guild.members.forEach(m=>{
 				if(m.username.toLowerCase().indexOf(str.toLowerCase()) > -1 || m.nick && m.nick.toLowerCase().indexOf(str.toLowerCase()) > -1){
 					if(m.username.toLowerCase() == str.toLowerCase() || m.nick && m.nick.toLowerCase() == str.toLowerCase()){
@@ -92,7 +101,68 @@ utils.lookupUser = function(ctx,msg,str,global){
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
 					}
 					clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
-				},30000).then(r=>{
+				},60000).then(r=>{
+					resolve(r);
+				});
+			}else{
+				resolve(userpool[0]);
+			}
+		}else{
+			if(!/[0-9]{17,21}/.test(str)){
+				reject("No results.");
+			}
+		}
+	});
+}
+
+utils.lookupGuild = function(ctx,msg,str,filter){
+	return new Promise((resolve,reject)=>{
+		if(/[0-9]{17,21}/.test(str)){
+			resolve(ctx.bot.requestHandler.request("GET","/users/"+str.match(/[0-9]{17,21}/)[0],true));
+		}
+
+		let userpool = [];
+		if(filter){
+			let f = ctx.bot.guilds.filter(filter);
+			f.forEach(m=>{
+				if(m.name.toLowerCase().indexOf(str.toLowerCase()) > -1){
+					if(m.name.toLowerCase() == str.toLowerCase()){
+						userpool = [m];
+					}else{
+						userpool.push(m);
+					}
+				}
+			});
+		}else{
+			ctx.bot.users.forEach(m=>{
+				if(m.name.toLowerCase().indexOf(str.toLowerCase()) > -1){
+					if(m.name.toLowerCase() == str.toLowerCase()){
+						userpool = [m];
+					}else{
+						userpool.push(m);
+					}
+				}
+			});
+		}
+
+		if(userpool.length > 0){
+			if(userpool.length > 1){
+				let a = [];
+				let u = 0;
+				for(let i=0;i<(userpool.length > 20 ? 20 : userpool.length);i++){
+					a.push("["+(i+1)+"] "+userpool[i].name);
+				}
+				ctx.utils.awaitMessage(ctx,msg,"Multiple guilds found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",(m)=>{
+					let value = parseInt(m.content);
+					if(m.content == "c"){
+						reject("Canceled");
+						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+					}else if(m.content == value){
+						resolve(userpool[value-1]);
+						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+					}
+					clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
+				},60000).then(r=>{
 					resolve(r);
 				});
 			}else{

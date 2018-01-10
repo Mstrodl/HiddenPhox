@@ -10,10 +10,11 @@ let elevated = [
     "151344471957569536"
 ]
 
-let _eval = function(ctx,msg,args){
+let _eval = async function(ctx,msg,args){
     if(msg.author.id === ctx.ownerid || elevated.includes(msg.author.id)){
         let errored = false;
         let out = eval(args);
+        if(out && out.then) out = await out;
         try{
             out = typeof out == "string" ? out : require("util").inspect(out,{depth:0});
         }catch(e){
@@ -136,7 +137,7 @@ let exec = function(ctx,msg,args){
 let avatar = function(ctx,msg,args){
     ctx.utils.lookupUser(ctx,msg,args ? args : msg.author.mention)
     .then(u=>{
-        let av = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png?size=1024")}`;
+        let av = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif?size=1024&_=.gif" : "png?size=1024")}`;
         msg.channel.createMessage({embed:{title:`Avatar for **${u.username}#${u.discriminator}**:`,image:{url:av}}});
     })
 }

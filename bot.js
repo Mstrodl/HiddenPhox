@@ -35,6 +35,7 @@ ctx.databases = initDB(ctx);
 ctx.vc         = new Eris.Collection();
 ctx.cmds       = new Eris.Collection();
 ctx.events     = new Eris.Collection();
+ctx.heists     = new Eris.Collection();
 ctx.snipes     = new Eris.Collection();
 ctx.esnipes    = new Eris.Collection();
 ctx.awaitMsgs  = new Eris.Collection();
@@ -171,8 +172,8 @@ client.on("messageCreate",msg=>{
 
 process.on("unhandledRejection",e=>{
 	//console.log("Uncaught rejection: "+e.message);
-	if (e.message.length > 1900) {
-		ctx.libs.request.post("https://hastebin.com/documents",{body:e.message},function(err,res,body){
+	if (e.length > 1900) {
+		ctx.libs.request.post("https://hastebin.com/documents",{body:e},function(err,res,body){
 			if(res.statusCode == 200){
 				let key = JSON.parse(body).key;
 				ctx.utils.logWarn(ctx,`Uncaught rejection: Output too long to send in a message: https://hastebin.com/${key}.js`);
@@ -181,7 +182,7 @@ process.on("unhandledRejection",e=>{
 			}
 		})
 	}else{
-		ctx.utils.logWarn(ctx,`Uncaught rejection: '${e.message}'`);
+		ctx.utils.logWarn(ctx,`Uncaught rejection: '${e}'`);
 	}
 });
 
