@@ -457,8 +457,8 @@ let steal = async function(ctx,msg,args){
         ctx.utils.logInfo(ctx,`[ECON] attempting steal amt:${amt}, u:${msg.author.username}#${msg.author.discriminator}, t:${u.username}#${u.discriminator}, c:${chance}, r:${res}`);
 
         if(res < chance){
-            await ctx.db.models.econ.update({currency:udata.currency+amt},{where:{id:msg.author.id}});
-            await ctx.db.models.econ.update({currency:tdata.currency-amt},{where:{id:u.id}});
+            await ctx.db.models.econ.update({currency:ctx.libs.sequelize.literal(`currency+${amt}`)},{where:{id:msg.author.id}});
+            await ctx.db.models.econ.update({currency:ctx.libs.sequelize.literal(`currency-${amt}`)},{where:{id:u.id}});
 
             let dm = await ctx.bot.getDMChannel(u.id);
             dm.createMessage(`**${msg.author.username}#${msg.author.discriminator}** stole **${amt}FC** from you.`);
@@ -469,10 +469,10 @@ let steal = async function(ctx,msg,args){
             msg.channel.createMessage(`${msg.author.mention} Steal successful. Stole **${amt}FC**.\n\`res: ${res}, chance: ${chance}\``);
         }else{
             let oof = Math.round(amt/2) < 1 ? amt : Math.round(amt/2);
-            await ctx.db.models.econ.update({currency:udata.currency-oof},{where:{id:msg.author.id}});
+            await ctx.db.models.econ.update({currency:ctx.libs.sequelize.literal(`currency-${oof}`)},{where:{id:msg.author.id}});
 
             let taxbank = await ctx.db.models.taxbanks.findOrCreate({where:{id:msg.channel.guild.id}});
-            await ctx.db.models.taxbanks.update({currency:taxbank[0].dataValues.currency+oof},{where:{id:msg.channel.guild.id}});
+            await ctx.db.models.taxbanks.update({currency:ctx.libs.sequelize.literal(`currency+${oof}`)},{where:{id:msg.channel.guild.id}});
 
             await jail(ctx,msg.author);
             await takepoint(ctx,msg.author);
@@ -519,6 +519,8 @@ let sstate = async function(ctx,msg,args){
 let doHeist = function(ctx,data){
     
 }
+
+
 
 let heist = async function(ctx,msg,args){
     args = ctx.utils.formatArgs(args);

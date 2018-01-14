@@ -530,7 +530,7 @@ let rinfo = function(ctx,msg,args){
 
         let perms = [];
         Object.keys(r.permissions.json).forEach(k=>{
-            perms.push(`${r.permissions.json[k] == true ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"} ${k}`);
+            perms.push(`${r.permissions.json[k] == true ? "\u2705" : "\u274C"} ${k}`);
         });
 
         if(perms.length == 0){
