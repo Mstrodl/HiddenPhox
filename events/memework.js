@@ -13,7 +13,7 @@ Before we can grant you membership and access to other channels, we must ask a f
 
 Please post your answers here and a moderator or higher will check and then decide. This can take some time.
 
-Note: The acceptance is done at our descretion and does not guarentee 100% acceptance. If you are denied, you will be kicked.
+Note: The acceptance is done at our discretion and does not guarantee 100% acceptance. If you are denied, you will be kicked.
 Please do not try to be persistent and keep joining back. Doing so will lead to a ban.`);
         },2000);
     }
