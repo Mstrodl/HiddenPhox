@@ -1,15 +1,15 @@
 let help = function(ctx,msg,args){
     let groups = {"unsorted":{name:"unsorted",cmds:[]}};
-        ctx.cmds.forEach(c=>{
-            if(c.group && groups[c.group]){
-                groups[c.group].cmds.push(c);
-            }else if(c.group && !groups[c.group]){
-                groups[c.group] = {name:c.group,cmds:[]};
-                groups[c.group].cmds.push(c);
-            }else if(!c.group){
-                groups["unsorted"].cmds.push(c);
-            }
-        });
+    ctx.cmds.forEach(c=>{
+        if(c.group && groups[c.group]){
+            groups[c.group].cmds.push(c);
+        }else if(c.group && !groups[c.group]){
+            groups[c.group] = {name:c.group,cmds:[]};
+            groups[c.group].cmds.push(c);
+        }else if(!c.group){
+            groups["unsorted"].cmds.push(c);
+        }
+    });
 
     if(!args){
         let _text = `__Commands for ${ctx.bot.user.username}__\n\`\`\`\n`;
@@ -46,8 +46,8 @@ let help = function(ctx,msg,args){
             msg.channel.createMessage("No guild specific commands found.");
         }
     }else{
-        if(ctx.cmds.get(args)){
-            let c = ctx.cmds.get(args);
+        if(ctx.cmds.filter(c=>c.name == args || (c.aliases && c.aliases.includes(args))).length > 0){
+            let c = ctx.cmds.filter(c=>c.name == args || (c.aliases && c.aliases.includes(args)))[0];
 
             let embed = {
                 color:0x4F586C,
@@ -129,15 +129,17 @@ let invite = function(ctx,msg,args){
 }
 
 let info = function(ctx,msg,args){
+    let erisv = require("eris/package.json").version;
+
     msg.channel.createMessage({embed:{
         title:"HiddenPhox, continuation of FlexBot v9",
-        description:"A general use bot written by **Cynthia Foxwell** `Cynthia\uD83D\uDC9A#0501`.",
+        description:"A general use bot written by **Cynthia Foxwell** `Cynthia\uD83D\uDC9C#0501`.",
         color:0x50596D,
         fields:[
             {name:"Language",value:"JavaScript",inline:true},
-            {name:"Library",value:"Eris",inline:true},
+            {name:"Library",value:`Eris v${erisv}`,inline:true},
             {name:"Node.js Version",value:process.version,inline:true},
-            {name:"Contributors",value:"**jane#0009** - Contributor\n**Brianna The Braixen#4109** - Contributor\n**KaosHeaven#0730** - Ex-host, ex-co-developer\n**Katie#8080** - Host\n**oplexz#0105** - Running support for FlexBot\n**luna#4677 & Memework\u2122** - Ideas, general help"},
+            {name:"Contributors",value:"**jane#0009** - Contributor\n**BraixenIRL#4109** - Host, Contributor\n**KaosHeaven#0730** - Ex-host, ex-co-developer\n**oplexz#0105** - Running support for FlexBot\n**luna#4677 & Memework\u2122** - Ideas, general help"},
             {name:"Links",value:"[GitHub](https://github.com/BoxOfFlex/HiddenPhox) | [Donate](https://paypal.me/boxofflex)"}
         ]
     }});

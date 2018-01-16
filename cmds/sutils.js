@@ -400,6 +400,38 @@ let unban = function(ctx,msg,args){
     }
 }
 
+let tidy = function(ctx,msg,args){
+    args = ctx.utils.formatArgs(args);
+    let cmd = args[0];
+    args = args.splice(1);
+    
+    if(cmd == "all"){
+        let amt = parseInt(args.join(" ")) > 0 ? parseInt(args.join(" ")) : 10;
+        
+        msg.channel.getMessages(amt+1).then(m=>{
+            let msgs = m.map(_m=>_m.id);
+            
+            msg.channel.deleteMessages(msgs).then(()=>{
+                msg.channel.createMessage(`Deleted ${amt} messages.`);  
+            });
+        });
+    }else if(cmd == "user"){
+        let amt = parseInt(args[1]) > 0 ? parseInt(args[1]) : 10;
+        
+        ctx.utils.lookupUser(ctx,msg,args[0]).then(u=>{
+            msg.channel.getMessages(amt+1).then(m=>{
+                let msgs = m.filter(_m=>_m.author.id==u.id).map(_m=>_m.id);
+                
+                msg.channel.deleteMessages(msgs).then(()=>{
+                    msg.channel.createMessage(`Deleted ${amt} messages.`);  
+                });
+            });
+        });
+    }else{
+        msg.channel.createMessage("__Tidy usage__\n  all [num] - All messages within number bounds (def. 10)")
+    }
+}
+
 module.exports = [
     {
         name:"snipe",
@@ -452,5 +484,14 @@ module.exports = [
         func:unban,
         group:"Server Utils",
         usage:"<user> [reason]"
+    },
+    
+    {
+        name:"tidy",
+        desc:"Clean up messages.",
+        func:tidy,
+        group:"Server Utils",
+        usage:"<subcommand> [arguments]",
+        aliases:["prune","purge"]
     }
 ]

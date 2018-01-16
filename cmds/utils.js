@@ -21,6 +21,12 @@ let _eval = async function(ctx,msg,args){
             out = e.message;
             errored = true;
         }
+        if(out && out.catch){
+            out.catch(e=>{
+                out = e;
+                errored = true;
+            });
+        }
 
         out = out.replace(ctx.bot.token,"lol no key 4 u");
 
@@ -530,7 +536,7 @@ let rinfo = function(ctx,msg,args){
 
         let perms = [];
         Object.keys(r.permissions.json).forEach(k=>{
-            perms.push(`${r.permissions.json[k] == true ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"} ${k}`);
+            perms.push(`${r.permissions.json[k] == true ? "\u2705" : "\u274C"} ${k}`);
         });
 
         if(perms.length == 0){
@@ -615,6 +621,70 @@ let slist = function(ctx,msg,args){
             text:`Page ${index} of ${Math.floor(ctx.bot.guilds.size/10)} | ${ctx.bot.guilds.size} total servers`
         }
     }});
+}
+
+let presence = function(ctx,msg,args){
+    if(!msg.channel.guild){
+        msg.channel.createMessage("Can only be used in guilds due to API limitations.");
+        return;
+    }
+
+    ctx.utils.lookupUser(ctx,msg,args || msg.member.mention)
+    .then(u=>{
+        u = msg.channel.guild.members.get(u.id);
+
+        if(u.game){
+            let embed = {
+                title:`Presence for \`${u.username}#${u.discriminator}\``,
+                fields:[
+                    {name:"Status",value:u.game ? (u.game.url ? "<:streaming:313956277132853248> [Streaming]("+u.game.url+")" : statusIcons[u.status]+" "+u.status ) : statusIcons[u.status]+" "+u.status,inline:true},
+                    {name:ptypes[u.game && u.game.type || 0],value:u.game ? u.game.name : "Nothing",inline:true},
+                ],
+                color:ctx.utils.topColor(ctx,msg,u.id)
+            };
+
+            if(u.game.application_id){
+                embed.fields.push({name:"Details",value:u.game.details ? u.game.details : "None provided.",inline:true});
+                embed.fields.push({name:"State",value:u.game.state ? u.game.state : "None provided.",inline:true});
+                embed.fields.push({name:"Party Size",value:(u.game.party && u.game.party.size) ? `${u.game.party.size[0]} of ${u.game.party.size[1]}` : "None provided.",inline:true});
+                embed.fields.push({name:"Large Icon Text",value:(u.game.assets && u.game.assets.large_text) ? u.game.assets.large_text : "None provided.",inline:true});
+                embed.fields.push({name:"Small Icon Text",value:(u.game.assets && u.game.assets.small_text) ? u.game.assets.small_text : "None provided.",inline:true});
+
+                embed.thumbnail = {url:(u.game.assets && u.game.assets.large_image) ? "attachment://rpcicon.png" : "https://cdn.discordapp.com/emojis/402275812637933598.png"};
+            }
+
+            embed.fields.push({name:"Start Time",value:(u.game.timestamps && u.game.timestamps.start) ? new Date(u.game.timestamps.start).toUTCString() : "None provided.",inline:true});
+            embed.fields.push({name:"End Time",value:(u.game.timestamps && u.game.timestamps.end) ? new Date(u.game.timestamps.end).toUTCString() : "None provided.",inline:true});
+
+            if(u.game.assets && u.game.assets.large_image){
+                let jimp = require("jimp");
+
+                jimp.read(`https://cdn.discordapp.com/app-assets/${u.game.application_id}/${u.game.assets.large_image}.png?size=128;`)
+                .then(async i=>{
+                    let a = i.clone().resize(96,jimp.AUTO);
+                    let b = (u.game.assets && u.game.assets.small_image) ? `https://cdn.discordapp.com/app-assets/${u.game.application_id}/${u.game.assets.small_image}.png?size=128;` : "";
+
+                    if(b.length > 0){
+                        b = await jimp.read(b);
+                        b = b.resize(32,jimp.AUTO);
+                        let b1 = new jimp(36,36,0xFFFFFFFF);
+                        let b2 = new jimp(32,32,0x00000088);
+                        a.composite(b1,96-36,96-36);
+                        a.composite(b2,96-34,96-34);
+                        a.composite(b,96-34,96-34);
+                    }
+
+                    a.getBuffer(jimp.MIME_PNG,(e,f)=>{
+                        msg.channel.createMessage({embed:embed},{name:"rpcicon.png",file:f});
+                    });
+                });
+            }else{
+                msg.channel.createMessage({embed:embed});
+            }
+        }else{
+            msg.channel.createMessage(`**${u.username}#${u.discriminator}** is not playing a game.\n**Status:** ${statusIcons[u.status]+" "+u.status}`)
+        }
+    });
 }
 
 module.exports = [
@@ -716,5 +786,12 @@ module.exports = [
         desc:"Server list of servers HiddenPhox is in.",
         func:slist,
         group:"utils"
+    },
+    {
+        name:"presence",
+        desc:"Get presence/playing game of someone.",
+        func:presence,
+        group:"utils",
+        aliases:["status"]
     },
 ]
