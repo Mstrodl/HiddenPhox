@@ -60,6 +60,7 @@ let help = function(ctx,msg,args){
             };
 
             if(c.aliases) embed.fields.push({name:"Aliases",value:c.aliases.join(", "),inline:true});
+            //embed.fields.push({name:"Full Description",value:c.fulldesc ? c.fulldesc : "None provided."});
 
             msg.channel.createMessage({embed:embed});
         }else{
@@ -175,9 +176,9 @@ module.exports = [
     },
     {
         name:"about",
-        desc:"Displays bot info",
+        desc:"Displays in depth bot info and credits.",
         func:info,
         group:"general",
         aliases:["info"]
     }
-]
+];

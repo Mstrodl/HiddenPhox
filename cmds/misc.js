@@ -159,12 +159,6 @@ module.exports = [
         aliases:["g","search"]
     },
     {
-        name:"gimg",
-        desc:"Search Google Images.",
-        func:gimg,
-        group:"misc"
-    },
-    {
         name:"me_irl",
         desc:"selfies of the soul. Pulls a post from r/me_irl",
         func:me_irl,

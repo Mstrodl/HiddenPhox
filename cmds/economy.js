@@ -287,7 +287,7 @@ let transfer = async function(ctx,msg,args){
 
             if(!owo[1]){ msg.channel.createMessage(`No amount specified, usage: \`${ctx.prefix}transfer user,amount\``); return; }
             let value = Math.round(parseInt(owo[1]));
-            let tax = Math.round(value*0.1);
+            let tax = Math.round(value*0.0225);
 
             if(isNaN(value) || value < 1){ msg.channel.createMessage(`Amount not a number or less than 1.`); return; }
             if(value > acc.currency){ msg.channel.createMessage("Value exceeds funds in wallet."); return; }
@@ -327,42 +327,29 @@ let transfer = async function(ctx,msg,args){
 
 let jail = async function(ctx,user){
     let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
-    let state = JSON.parse(data.state);
-    let a = state;
 
-    a.jail = new Date().getTime()+(8*60*60*1000);
-
-    await ctx.db.models.econ.update({state:JSON.stringify(a)},{where:{id:user.id}});
+    await ctx.db.models.econ.update({cd_jail:new Date().getTime()+(8*60*60*1000)},{where:{id:user.id}});
     ctx.utils.logInfo(ctx,`[ECON] Jailed ${user.username}#${user.discriminator}.`);
 }
 
 let grace = async function(ctx,user){
     let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
-    let state = JSON.parse(data.state);
 
-    state.grace = new Date().getTime()+(6*60*60*1000);
-
-    await ctx.db.models.econ.update({state:JSON.stringify(state)},{where:{id:user.id}});
+    await ctx.db.models.econ.update({cd_grace:new Date().getTime()+(6*60*60*1000)},{where:{id:user.id}});
     ctx.utils.logInfo(ctx,`[ECON] Set grace period for ${user.username}#${user.discriminator}.`);
 }
 
 let regen = async function(ctx,user){
     let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
-    let state = JSON.parse(data.state);
 
-    state.regen = new Date().getTime()+(5*60*60*1000);
-
-    await ctx.db.models.econ.update({state:JSON.stringify(state)},{where:{id:user.id}});
+    await ctx.db.models.econ.update({cd_regen:new Date().getTime()+(5*60*60*1000)},{where:{id:user.id}});
     ctx.utils.logInfo(ctx,`[ECON] Starting regen for ${user.username}#${user.discriminator}.`);
 }
 
 let takepoint = async function(ctx,user){
     let data = await ctx.db.models.econ.findOne({where:{id:user.id}});
-    let state = JSON.parse(data.state);
 
-    state.points--;
-
-    await ctx.db.models.econ.update({state:JSON.stringify(state)},{where:{id:user.id}});
+    await ctx.db.models.econ.update({points:ctx.libs.sequelize.literal(`points-1`)},{where:{id:user.id}});
     ctx.utils.logInfo(ctx,`[ECON] Removing a stealing point for ${user.username}#${user.discriminator}.`);
     if(state.points == 0){
         regen(ctx,user);
@@ -399,8 +386,6 @@ let steal = async function(ctx,msg,args){
     .then(async u=>{
         let tdata = await ctx.db.models.econ.findOne({where:{id:u.id}});
         let udata = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
-        let tstate = JSON.parse(tdata.state);
-        let ustate = JSON.parse(udata.state);
 
         let now = new Date().getTime();
 
@@ -424,17 +409,17 @@ let steal = async function(ctx,msg,args){
             return;
         }
 
-        if(ustate.jail > now){
+        if(udata.cd_jail > now){
             msg.channel.createMessage("You are still in jail.");
             return;
         }
 
-        if(tstate.grace > now){
+        if(tdata.cd_grace > now){
             msg.channel.createMessage("Cannot steal from target, they're still in grace period.");
             return;
         }
 
-        if(ustate.points == 0){
+        if(udata.points == 0){
             msg.channel.createMessage("You do not have any stealing points.");
             if(ustate.regen < now){
                 regen(ctx,msg.author);
@@ -448,10 +433,10 @@ let steal = async function(ctx,msg,args){
         }
 
         let chance = 1 + (tdata.currency/amt) + 0.69;
-        chance = chance > 5 ? 5 : chance;
+        chance = chance > 10 ? 10 : chance;
         chance = chance.toFixed(3);
 
-        let res = Math.random()*10;
+        let res = Math.random()*15;
         res = res.toFixed(3);
 
         ctx.utils.logInfo(ctx,`[ECON] attempting steal amt:${amt}, u:${msg.author.username}#${msg.author.discriminator}, t:${u.username}#${u.discriminator}, c:${chance}, r:${res}`);
@@ -491,22 +476,34 @@ let steal = async function(ctx,msg,args){
 
 let sstate = async function(ctx,msg,args){
     let data = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
-    let state = JSON.parse(data.state);
     let now = new Date().getTime();
 
     let out = [
         `__Stealing state for **${msg.author.username}#${msg.author.discriminator}**__`,
-        `**Points:** ${state.points}\n`
+        `**Points:** ${data.points}`,
+        `\n**Cooldowns:**`
     ];
 
-    if(state.jail > now){
-        out.push(`**In Jail:** ${ctx.utils.remainingTime(state.jail-now)} remaining.`);
+    if(data.cd_jail > now){
+        out.push(`<:RedTick:349381062054510604> **In Jail:** ${ctx.utils.remainingTime(data.cd_jail-now)} remaining.`);
+    }else{
+        out.push(`<:GreenTick:349381062176145408> **Not in jail.**`);
     }
-    if(state.grace > now){
-        out.push(`**Grace Period:** ${ctx.utils.remainingTime(state.grace-now)} remaining.`);
+    
+    if(data.cd_grace > now){
+        out.push(`<:RedTick:349381062054510604> **Grace Period:** ${ctx.utils.remainingTime(data.cd_grace-now)} remaining.`);
+    }else{
+        out.push(`<:GreenTick:349381062176145408> **Not in grace period.**`);
     }
-    if(state.regen > now){
-        out.push(`**Point Regen:** ${ctx.utils.remainingTime(state.regen-now)} remaining.`);
+
+    if(data.cd_heist > now){
+        out.push(`<:RedTick:349381062054510604> **Heist Cooldown:** ${ctx.utils.remainingTime(data.cd_heist-now)} remaining.`);
+    }else{
+        out.push(`<:GreenTick:349381062176145408> **Can heist.**`);
+    }
+    
+    if(data.cd_regen > now){
+        out.push(`<:RedTick:349381062054510604> **Point Regen:** ${ctx.utils.remainingTime(data.cd_regen-now)} remaining.`);
     }
 
     msg.channel.createMessage(out.join("\n"));
@@ -516,14 +513,16 @@ let sstate = async function(ctx,msg,args){
 
 /* Start Heist Code Stuffs */
 
-let doHeist = function(ctx,data){
+let startHeist = function(ctx,msg){
     
 }
 
-
-
 let heist = async function(ctx,msg,args){
     args = ctx.utils.formatArgs(args);
+    
+    let guild = args[0];
+    let amt = args[1];
+    
     let dbdata = await ctx.db.models.taxbanks.findOrCreate({where:{id:msg.channel.guild.id}});
     let data = {};
 

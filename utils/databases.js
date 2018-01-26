@@ -22,11 +22,31 @@ module.exports = function(ctx){
             defaultValue: 0,
             allowNull: false,
         },
-        state: {
-            type: ctx.libs.sequelize.STRING,
-            defaultValue: '{"points":3,"jail":0,"grace":0,"regen":0}',
+        points: {
+            type: ctx.libs.sequelize.INTEGER,
+            defaultValue: 3,
             allowNull: false,
-        }
+        },
+        cd_jail: {
+            type: ctx.libs.sequelize.INTEGER,
+            defaultValue: 0,
+            allowNull: false,
+        },
+        cd_grace: {
+            type: ctx.libs.sequelize.INTEGER,
+            defaultValue: 0,
+            allowNull: false,
+        },
+        cd_regen: {
+            type: ctx.libs.sequelize.INTEGER,
+            defaultValue: 0,
+            allowNull: false,
+        },
+        cd_heist: {
+            type: ctx.libs.sequelize.INTEGER,
+            defaultValue: 0,
+            allowNull: false,
+        },
     });
 
     dbs.taxbanks = ctx.db.define("taxbanks", {
@@ -69,36 +89,6 @@ module.exports = function(ctx){
             allowNull: false,
         },
     });
-
-    dbs.memework = {};
-
-    dbs.memework.modvote = ctx.db.define("mw_modvote",{
-        voteid: {
-            type: ctx.libs.sequelize.INTEGER,
-            unique: true,
-            primaryKey: true
-        },
-        creator: {
-            type: ctx.libs.sequelize.STRING,
-            defaultValue: "",
-            allowNull: false,
-        },
-        msgid: {
-            type: ctx.libs.sequelize.STRING,
-            defaultValue: "",
-            allowNull: false,
-        },
-        topic: {
-            type: ctx.libs.sequelize.STRING,
-            defaultValue: "",
-            allowNull: false,
-        },
-        data: {
-            type: ctx.libs.sequelize.JSON,
-            defaultValue: "",
-            allowNull: false,
-        },
-    })
 
     dbs.econ.sync({alter: true});
     dbs.taxbanks.sync({alter: true});

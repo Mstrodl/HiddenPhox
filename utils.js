@@ -118,7 +118,7 @@ utils.lookupUser = function(ctx,msg,str,filter){
 utils.lookupGuild = function(ctx,msg,str,filter){
 	return new Promise((resolve,reject)=>{
 		if(/[0-9]{17,21}/.test(str)){
-			resolve(ctx.bot.requestHandler.request("GET","/users/"+str.match(/[0-9]{17,21}/)[0],true));
+			resolve(ctx.bot.guilds.get(str));
 		}
 
 		let userpool = [];
@@ -222,22 +222,7 @@ utils.remainingTime = function(owo){
 }
 
 utils.createEvent = function(client,type,func,ctx){
-	if(type == "messageCreate"){
-		client.on("messageCreate",msg=>func(msg,ctx));
-	}else if(type == "messageReactionAdd"){
-		client.on("messageReactionAdd",(msg,emoji,uid)=>func(msg,emoji,uid,ctx));
-	}else if(type == "messageReactionRemove"){
-		client.on("messageReactionRemove",(msg,emoji,uid)=>func(msg,emoji,uid,ctx));
-	}else if(type == "messageUpdate"){
-		client.on("messageUpdate",(msg,oldMsg)=>func(msg,oldMsg,ctx));
-	}else if(type == "messageDelete"){
-		client.on("messageDelete",msg=>func(msg,ctx));
-	}else if(type == "channelUpdate"){
-		client.on("channelUpdate",(channel,oldChannel)=>func(channel,oldChannel,ctx));
-	}else{
-		utils.logWarn(ctx,"Message type not defined, attempting with only passing `msg`");
-		client.on(type,msg=>func(msg,ctx));
-	}
+	client.on(type,(...args)=>func(...args,ctx));
 }
 
 utils.formatArgs = function(str){

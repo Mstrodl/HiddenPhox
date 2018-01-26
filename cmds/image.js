@@ -281,7 +281,7 @@ let color = function(ctx,msg,args){
 					}
 				}},{name:`${col}.png`,file:f});
 			});
-		}else if(/\d{1,8}/.test(args)){
+		}else if(/^\d{1,8}$/.test(args)){
 			let int = parseInt(args.match(/\d{1,8}/)[0]);
 			if(int > 0xFFFFFF) int = 0xFFFFFF;
 

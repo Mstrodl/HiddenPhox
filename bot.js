@@ -95,8 +95,13 @@ for(let f of files){
 	}
 }
 
-let createEvent = function(client,type,func,ctx){
-	client.on(type,(...args)=>func(...args,ctx));
+let createEvent = function(client,event,ctx){
+	if(event.event == "timer"){
+		if(!event.interval) return;
+		ctx.events.get(event.event+"|"+event.name).timer = setInterval(event.func,event.interval);
+	}else{
+		client.on(event.event,(...args)=>event.func(...args,ctx));
+	}
 }
 
 var files = ctx.libs.fs.readdirSync(__dirname+"/events");
@@ -104,7 +109,7 @@ for(let f of files){
 	let e = require(__dirname+"/events/"+f);
 	if(e.event && e.func && e.name){
 		ctx.events.set(e.event+"|"+e.name,e);
-		createEvent(client,e.event,e.func,ctx);
+		createEvent(client,e,e.func,ctx);
 		console.log(`Loaded event: ${e.event}|${e.name} (${f})`);
 	}else if(e.length){
 		for(let i=0;i<e.length;i++){

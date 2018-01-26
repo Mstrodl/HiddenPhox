@@ -13,20 +13,17 @@ let elevated = [
 let _eval = async function(ctx,msg,args){
     if(msg.author.id === ctx.ownerid || elevated.includes(msg.author.id)){
         let errored = false;
-        let out = eval(args);
-        if(out && out.then) out = await out;
+        let out;
+        
         try{
-            out = typeof out == "string" ? out : require("util").inspect(out,{depth:0});
+            out = eval(args);
+            if(out && out.then) out = await out;
         }catch(e){
             out = e.message;
             errored = true;
         }
-        if(out && out.catch){
-            out.catch(e=>{
-                out = e;
-                errored = true;
-            });
-        }
+        
+        out = typeof out == "string" ? out : require("util").inspect(out,{depth:0});
 
         out = out.replace(ctx.bot.token,"lol no key 4 u");
 
@@ -640,10 +637,10 @@ let presence = function(ctx,msg,args){
                     {name:"Status",value:u.game ? (u.game.url ? "<:streaming:313956277132853248> [Streaming]("+u.game.url+")" : statusIcons[u.status]+" "+u.status ) : statusIcons[u.status]+" "+u.status,inline:true},
                     {name:ptypes[u.game && u.game.type || 0],value:u.game ? u.game.name : "Nothing",inline:true},
                 ],
-                color:ctx.utils.topColor(ctx,msg,u.id)
+                color:u.game.name == "Spotify" ? 0x1db954 : ctx.utils.topColor(ctx,msg,u.id)
             };
 
-            if(u.game.application_id){
+            if(u.game.application_id || u.game.flags == 48){
                 embed.fields.push({name:"Details",value:u.game.details ? u.game.details : "None provided.",inline:true});
                 embed.fields.push({name:"State",value:u.game.state ? u.game.state : "None provided.",inline:true});
                 embed.fields.push({name:"Party Size",value:(u.game.party && u.game.party.size) ? `${u.game.party.size[0]} of ${u.game.party.size[1]}` : "None provided.",inline:true});
@@ -653,13 +650,13 @@ let presence = function(ctx,msg,args){
                 embed.thumbnail = {url:(u.game.assets && u.game.assets.large_image) ? "attachment://rpcicon.png" : "https://cdn.discordapp.com/emojis/402275812637933598.png"};
             }
 
-            embed.fields.push({name:"Start Time",value:(u.game.timestamps && u.game.timestamps.start) ? new Date(u.game.timestamps.start).toUTCString() : "None provided.",inline:true});
-            embed.fields.push({name:"End Time",value:(u.game.timestamps && u.game.timestamps.end) ? new Date(u.game.timestamps.end).toUTCString() : "None provided.",inline:true});
+            embed.fields.push({name:"Start Time",value:(u.game.timestamps && u.game.timestamps.start) ? ctx.utils.remainingTime(new Date().getTime()-u.game.timestamps.start)+" elapsed" : "None provided.",inline:true});
+            embed.fields.push({name:"End Time",value:(u.game.timestamps && u.game.timestamps.end) ? ctx.utils.remainingTime(u.game.timestamps.end-u.game.timestamps.start)+" remaining" : "None provided.",inline:true});
 
             if(u.game.assets && u.game.assets.large_image){
                 let jimp = require("jimp");
 
-                jimp.read(`https://cdn.discordapp.com/app-assets/${u.game.application_id}/${u.game.assets.large_image}.png?size=128;`)
+                jimp.read(u.game.assets.large_image.startsWith("spotify:") ? u.game.assets.large_image.replace("spotify:","http://i.scdn.co/image/") : `https://cdn.discordapp.com/app-assets/${u.game.application_id}/${u.game.assets.large_image}.png?size=128;`)
                 .then(async i=>{
                     let a = i.clone().resize(96,jimp.AUTO);
                     let b = (u.game.assets && u.game.assets.small_image) ? `https://cdn.discordapp.com/app-assets/${u.game.application_id}/${u.game.assets.small_image}.png?size=128;` : "";
