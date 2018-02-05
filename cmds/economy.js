@@ -351,7 +351,7 @@ let takepoint = async function(ctx,user){
 
     await ctx.db.models.econ.update({points:ctx.libs.sequelize.literal(`points-1`)},{where:{id:user.id}});
     ctx.utils.logInfo(ctx,`[ECON] Removing a stealing point for ${user.username}#${user.discriminator}.`);
-    if(state.points == 0){
+    if(data.points-1 <= 0){
         regen(ctx,user);
     }
 }
@@ -421,7 +421,7 @@ let steal = async function(ctx,msg,args){
 
         if(udata.points == 0){
             msg.channel.createMessage("You do not have any stealing points.");
-            if(ustate.regen < now){
+            if(udata.cd_regen < now){
                 regen(ctx,msg.author);
             }
             return;
@@ -434,10 +434,10 @@ let steal = async function(ctx,msg,args){
 
         let chance = 1 + (tdata.currency/amt) + 0.69;
         chance = chance > 10 ? 10 : chance;
-        chance = chance.toFixed(3);
+        chance = parseFloat(chance.toFixed(3));
 
         let res = Math.random()*15;
-        res = res.toFixed(3);
+        res = parseFloat(res.toFixed(3));
 
         ctx.utils.logInfo(ctx,`[ECON] attempting steal amt:${amt}, u:${msg.author.username}#${msg.author.discriminator}, t:${u.username}#${u.discriminator}, c:${chance}, r:${res}`);
 
@@ -489,7 +489,7 @@ let sstate = async function(ctx,msg,args){
     }else{
         out.push(`<:GreenTick:349381062176145408> **Not in jail.**`);
     }
-    
+
     if(data.cd_grace > now){
         out.push(`<:RedTick:349381062054510604> **Grace Period:** ${ctx.utils.remainingTime(data.cd_grace-now)} remaining.`);
     }else{
@@ -501,7 +501,7 @@ let sstate = async function(ctx,msg,args){
     }else{
         out.push(`<:GreenTick:349381062176145408> **Can heist.**`);
     }
-    
+
     if(data.cd_regen > now){
         out.push(`<:RedTick:349381062054510604> **Point Regen:** ${ctx.utils.remainingTime(data.cd_regen-now)} remaining.`);
     }
@@ -514,15 +514,15 @@ let sstate = async function(ctx,msg,args){
 /* Start Heist Code Stuffs */
 
 let startHeist = function(ctx,msg){
-    
+
 }
 
 let heist = async function(ctx,msg,args){
     args = ctx.utils.formatArgs(args);
-    
+
     let guild = args[0];
     let amt = args[1];
-    
+
     let dbdata = await ctx.db.models.taxbanks.findOrCreate({where:{id:msg.channel.guild.id}});
     let data = {};
 

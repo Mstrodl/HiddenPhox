@@ -1,4 +1,4 @@
-let messageDelete = function(msg,ctx){
+/*let messageDelete = function(msg,ctx){
 	if(!msg.channel.guild) return;
 	ctx.snipes.set(msg.channel.id,msg);
 }
@@ -20,4 +20,4 @@ module.exports = [
 		name:"snipe",
 		func:messageUpdate
 	}
-]
+]*/

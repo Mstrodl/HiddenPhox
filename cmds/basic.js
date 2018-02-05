@@ -129,18 +129,25 @@ let invite = function(ctx,msg,args){
     }});
 }
 
+
+// To anyone who actually forks my bot for their own use
+// For the love of god
+// LEAVE THIS ALONE, thanks
 let info = function(ctx,msg,args){
     let erisv = require("eris/package.json").version;
 
+    let u = ctx.bot.users;
+
     msg.channel.createMessage({embed:{
         title:"HiddenPhox, continuation of FlexBot v9",
-        description:"A general use bot written by **Cynthia Foxwell** `Cynthia\uD83D\uDC9C#0501`.",
+        description:`A general use bot written by **Cynthia Foxwell** \`${u.get("150745989836308480").username}#${u.get("150745989836308480").discriminator}\`.`,
         color:0x50596D,
         fields:[
             {name:"Language",value:"JavaScript",inline:true},
             {name:"Library",value:`Eris v${erisv}`,inline:true},
             {name:"Node.js Version",value:process.version,inline:true},
-            {name:"Contributors",value:"**jane#0009** - Contributor\n**BraixenIRL#4109** - Host, Contributor\n**KaosHeaven#0730** - Ex-host, ex-co-developer\n**oplexz#0105** - Running support for FlexBot\n**luna#4677 & Memework\u2122** - Ideas, general help"},
+            {name:"Contributors",value:`**${u.get("132297363233570816").username}#${u.get("132297363233570816").discriminator}** (Brianna) - Host, Contributor\n**${u.get("151344471957569536").username}#${u.get("151344471957569536").discriminator}** (Sammy) - Ex-host, ex-co-developer\n**${u.get("123601647258697730").username}#${u.get("123601647258697730").discriminator}** (Jane) - Contributor\n**${u.get("162819866682851329").username}#${u.get("162819866682851329").discriminator}** (Luna) - Contributor\n**Memework\u2122** - Ideas, general help, bugfixes, being a great community <3`},
+            {name:"Honorable Mentions",value:`**oplexz** - Running support for FlexBot\n**Discord Bots** - A once great community that had great people who helped once in a while and gave ideas`},
             {name:"Links",value:"[GitHub](https://github.com/BoxOfFlex/HiddenPhox) | [Donate](https://paypal.me/boxofflex)"}
         ]
     }});

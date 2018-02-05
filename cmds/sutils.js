@@ -453,7 +453,7 @@ let tidy = function(ctx,msg,args){
 }
 
 module.exports = [
-    {
+    /*{
         name:"snipe",
         desc:"Snipe recently deleted messages.",
         func:snipe,
@@ -464,7 +464,7 @@ module.exports = [
         desc:"Snipe recently edited messages.",
         func:esnipe,
         group:"Server Utils"
-    },
+    },*/
     {
         name:"dehoist",
         desc:"Dehoist a user's name or nickname.",

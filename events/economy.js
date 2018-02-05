@@ -18,9 +18,12 @@ let messageCreate = async function(msg,ctx){
 let pointRegen = async function(ctx){
     let list = await ctx.db.models.econ.findAll();
     
+    let now = new Date().getTime();
+    
     list.forEach(a=>{
-        if(a.cd_regen < new Date().getTime() && a.points == 0){
-            ctx.db.models.econ.update({points:3},{where:{id:a.id}});
+        if(a.dataValues.cd_regen < now && a.dataValues.points == 0){
+            ctx.utils.logInfo(ctx,"[ECON] Resetting points for "+a.dataValues.id);
+            ctx.db.models.econ.update({points:3},{where:{id:a.dataValues.id}});
         }
     });
 }

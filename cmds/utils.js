@@ -684,6 +684,55 @@ let presence = function(ctx,msg,args){
     });
 }
 
+let jumbo = function(ctx,msg,args){
+    if(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/.test(args)){
+        let a = args.match(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/);
+        let animated = a[1] ? true : false;
+        let name = a[2];
+        let id = a[3];
+
+        msg.channel.createMessage({embed:{
+            title:`:${name}: - \`${id}\``,
+            image:{
+                url:`https://cdn.discordapp.com/emojis/${id}.${animated ? "gif" : "png"}?v=1`
+            }
+        }});
+    }else{
+        msg.channel.createMessage("Emote not found. This currently only works for custom ones.");
+    }
+}
+
+let einfo = function(ctx,msg,args){
+    if(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/.test(args)){
+        let a = args.match(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/);
+        let animated = a[1] ? true : false;
+        let name = a[2];
+        let id = a[3];
+        let guild;
+        let emote;
+
+        if(ctx.emotes.get(id)){
+            emote = ctx.emotes.get(id);
+            guild = ctx.bot.guilds.get(emote.guild_id)
+        }
+
+        msg.channel.createMessage({embed:{
+            title:`Emoji Info: :${name}:`,
+            fields:[
+                {name:"ID",value:id,inline:true},
+                {name:"Full Code",value:a[0].replace("<","\\<").replace(">","\\>"),inline:true},
+                {name:"Animated?",value:animated,inline:true},
+                {name:"Guild",value:guild ? `${guild.name} \`(${guild.id})\`` : "Not found",inline:true}
+            ],
+            thumbnail:{
+                url:`https://cdn.discordapp.com/emojis/${id}.${animated ? "gif" : "png"}?v=1`
+            }
+        }});
+    }else{
+        msg.channel.createMessage("Emote not found. This currently only works for custom ones.");
+    }
+}
+
 module.exports = [
     {
         name:"eval",
@@ -790,5 +839,18 @@ module.exports = [
         func:presence,
         group:"utils",
         aliases:["status"]
+    },
+    {
+        name:"jumbo",
+        desc:"Get the raw image of an emoji.",
+        func:jumbo,
+        group:"utils"
+    },
+    {
+        name:"einfo",
+        desc:"Get info of an emoji.",
+        func:einfo,
+        group:"utils",
+        aliases:["e","emote","emoji"]
     },
 ]

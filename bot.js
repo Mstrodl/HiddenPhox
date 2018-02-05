@@ -34,6 +34,7 @@ ctx.databases = initDB(ctx);
 
 ctx.vc         = new Eris.Collection();
 ctx.cmds       = new Eris.Collection();
+ctx.emotes     = new Eris.Collection();
 ctx.events     = new Eris.Collection();
 ctx.heists     = new Eris.Collection();
 ctx.snipes     = new Eris.Collection();
@@ -57,6 +58,13 @@ client.on("ready",()=>{
 	});
 
 	ctx.libs.request.post("https://bots.discord.pw/api/bots/"+ctx.bot.user.id+"/stats",{headers:{"Authorization":ctx.apikeys.dbots},json:{server_count:ctx.bot.guilds.size}});
+
+	ctx.bot.guilds.forEach(g=>{
+		g.emojis.forEach(e=>{
+			e.guild_id = g.id;
+			ctx.emotes.set(e.id,e);
+		});
+	});
 });
 
 client.on("guildCreate",function(guild){
@@ -95,12 +103,15 @@ for(let f of files){
 	}
 }
 
-let createEvent = function(client,event,ctx){
-	if(event.event == "timer"){
-		if(!event.interval) return;
-		ctx.events.get(event.event+"|"+event.name).timer = setInterval(event.func,event.interval);
+let createEvent = function(client,e,ctx){
+	if(e.event == "timer"){
+		if(!e.interval) {
+			console.log(`No interval for event: ${e.event+"|"+e.name}, not setting up interval.`);
+			return;
+		}
+		ctx.events.get(e.event+"|"+e.name).timer = setInterval(e.func,e.interval,ctx);
 	}else{
-		client.on(event.event,(...args)=>event.func(...args,ctx));
+		client.on(e.event,(...args)=>e.func(...args,ctx));
 	}
 }
 
@@ -109,14 +120,14 @@ for(let f of files){
 	let e = require(__dirname+"/events/"+f);
 	if(e.event && e.func && e.name){
 		ctx.events.set(e.event+"|"+e.name,e);
-		createEvent(client,e,e.func,ctx);
+		createEvent(client,e,ctx);
 		console.log(`Loaded event: ${e.event}|${e.name} (${f})`);
 	}else if(e.length){
 		for(let i=0;i<e.length;i++){
 			let a = e[i];
 			if(a.event && a.func && a.name){
 				ctx.events.set(a.event+"|"+a.name,a);
-				createEvent(client,a.event,a.func,ctx);
+				createEvent(client,a,ctx);
 				console.log(`Loaded event: ${a.event}|${a.name} (${f})`);
 			}
 		}
