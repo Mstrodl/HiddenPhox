@@ -1,4 +1,4 @@
-let help = function(ctx,msg,args){
+let help = async function(ctx,msg,args){
     let groups = {"unsorted":{name:"unsorted",cmds:[]}};
     ctx.cmds.forEach(c=>{
         if(c.group && groups[c.group]){
@@ -48,6 +48,9 @@ let help = function(ctx,msg,args){
     }else{
         if(ctx.cmds.filter(c=>c.name == args || (c.aliases && c.aliases.includes(args))).length > 0){
             let c = ctx.cmds.filter(c=>c.name == args || (c.aliases && c.aliases.includes(args)))[0];
+            
+            let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
+			let usage = JSON.parse(analytics.dataValues.cmd_usage);
 
             let embed = {
                 color:0x4F586C,
@@ -56,6 +59,7 @@ let help = function(ctx,msg,args){
                     {name:"Description",value:c.desc,inline:true},
                     {name:"Group",value:c.group.charAt(0).toUpperCase()+c.group.slice(1),inline:true},
                     {name:"Usage",value:`${ctx.prefix}${c.name} `+(c.usage ? c.usage : ""),inline:true},
+                    {name:"Command Uses",value:usage[c.name] || 0,inline:true}
                 ]
             };
 

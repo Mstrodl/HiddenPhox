@@ -143,7 +143,7 @@ client.on("messageCreate",msg=>{
 
 		let [cmd2, ...args2] = msg.cleanContent.split(" ");
 
-		ctx.cmds.forEach(c=>{
+		ctx.cmds.forEach(async c=>{
 			if(cmd == prefix+c.name){
 				if(c.guild && msg.channel.guild && c.guild != msg.channel.guild.id) return;
 				try{
@@ -153,6 +153,14 @@ client.on("messageCreate",msg=>{
 					msg.channel.createMessage(":warning: An error occured.\n```\n"+e.message+"\n```");
 					ctx.utils.logWarn(ctx,`'${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' errored with '${e.message}'`);
 				}
+				
+				let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
+				let usage = JSON.parse(analytics.dataValues.cmd_usage);
+				
+				usage[c.name] = usage[c.name] ? usage[c.name]++ : 1;
+				
+				await ctx.db.models.analytics.update({cmd_usage:JSON.stringify(usage)},{where:{id:1}});
+				
 				hasRan = true;
 			}
 
@@ -165,6 +173,14 @@ client.on("messageCreate",msg=>{
 					msg.channel.createMessage(":warning: An error occured.\n```\n"+e.message+"\n```");
 					ctx.utils.logWarn(ctx,`'${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' errored with '${e.message}'`);
 				}
+				
+				let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
+				let usage = JSON.parse(analytics.dataValues.cmd_usage);
+				
+				usage[c.name] = usage[c.name] ? usage[c.name]++ : 1;
+				
+				await ctx.db.models.analytics.update({cmd_usage:JSON.stringify(usage)},{where:{id:1}});
+				
 				hasRan = true;
 			}
 		});

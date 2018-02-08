@@ -93,7 +93,7 @@ utils.lookupUser = function(ctx,msg,str,filter){
 				}
 				ctx.utils.awaitMessage(ctx,msg,"Multiple users found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",(m)=>{
 					let value = parseInt(m.content);
-					if(m.content == "c"){
+					if(m.content.toLowerCase() == "c"){
 						reject("Canceled");
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
 					}else if(m.content == value){
@@ -154,7 +154,7 @@ utils.lookupGuild = function(ctx,msg,str,filter){
 				}
 				ctx.utils.awaitMessage(ctx,msg,"Multiple guilds found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",(m)=>{
 					let value = parseInt(m.content);
-					if(m.content == "c"){
+					if(m.content.toLowerCase() == "c"){
 						reject("Canceled");
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
 					}else if(m.content == value){
@@ -174,6 +174,59 @@ utils.lookupGuild = function(ctx,msg,str,filter){
 			}
 		}
 	});
+}
+
+utils.lookupRole = function(ctx,msg,str,filter){
+    return new Promise((resolve,reject)=>{
+        if(/[0-9]{17,21}/.test(str)){
+            resolve(msg.channel.guild.roles.get(str.match(/[0-9]{17,21}/)[0]));
+        }
+
+		let userpool = [];
+		if(filter){
+			let f = msg.channel.guild.roles.filter(filter);
+			f.forEach(r=>{
+				if(r.name.toLowerCase().indexOf(str.toLowerCase()) > -1){
+					userpool.push(r);
+				}
+			});
+		}else{
+			msg.channel.guild.roles.forEach(r=>{
+				if(r.name.toLowerCase().indexOf(str.toLowerCase()) > -1){
+					userpool.push(r);
+				}
+			});
+		}
+
+        if(userpool.length > 0){
+            if(userpool.length > 1){
+                let a = [];
+                let u = 0;
+                for(let i=0;i<(userpool.length > 20 ? 20 : userpool.length);i++){
+                    a.push("["+(i+1)+"] "+userpool[i].name)
+                }
+                ctx.utils.awaitMessage(ctx,msg,"Multiple roles found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",(m)=>{
+                    let value = parseInt(m.content);
+                    if(m.content.toLowerCase() == "c"){
+                        reject("Canceled");
+                        ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                    }else if(m.content == value){
+                        resolve(userpool[value-1]);
+                        ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                    }
+                    clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
+                },30000).then(r=>{
+                    resolve(r);
+                });
+            }else{
+                resolve(userpool[0]);
+            }
+        }else{
+            if(!/[0-9]{17,21}/.test(str)){
+                reject("No results.");
+            }
+        }
+    });
 }
 
 function timeString(){

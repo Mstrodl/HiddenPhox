@@ -257,7 +257,7 @@ let transfer = async function(ctx,msg,args){
     let owo = ctx.utils.formatArgs(args);
 
     if(!args || !owo[0]){
-        msg.channel.createMessage(`No arguments specified, usage: \`${ctx.prefix}transfer user,amount\``);
+        msg.channel.createMessage(`No arguments specified, usage: \`${ctx.prefix}transfer "user" amount\``);
         return;
     }
 
@@ -279,7 +279,7 @@ let transfer = async function(ctx,msg,args){
         }catch(e){
             msg.channel.createMessage(e);
         }
-        if(msg.author.id == u.id){ msg.channel.createMessage(`Sending money to yourself has been disabled due to an exploit.`); return; }
+        if(msg.author.id == u.id){ msg.channel.createMessage(`You can't send money to yourself.`); return; }
 
         let target = await ctx.db.models.econ.findOne({where:{id:u.id}});
 
@@ -296,9 +296,10 @@ let transfer = async function(ctx,msg,args){
 
             ctx.utils.awaitMessage(ctx,msg,`${msg.author.mention}, you're about to send **${value}FC** to **${u.username}#${u.discriminator}**.\n\`\`\`diff\n- ${value}FC | transfer\n- ${tax}FC | 10% tax\n%%%%\n% ${value-tax}FC sent\`\`\`\n\nTo complete transaction, type \`${pin}\`, else type \`c\` or \`cancel\``,
             async m=>{
-                if(m.content == "c" || m.content == "cancel"){
+                if(m.content.toLowerCase() == "c" || m.content.toLowerCase() == "cancel"){
                     msg.channel.createMessage("Canceled.");
-                    return "Canceled.";
+                    reject("Canceled");
+                    ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
                 }else if(m.content == pin){
                     ctx.db.models.econ.update({currency:acc.currency-value},{where:{id:msg.author.id}});
                     ctx.db.models.econ.update({currency:target.currency+(value-tax)},{where:{id:u.id}});
@@ -312,7 +313,7 @@ let transfer = async function(ctx,msg,args){
                     dm.createMessage(`**${msg.author.username}#${msg.author.discriminator}** sent you **${value-tax}FC**.`);
 
                     msg.channel.createMessage("Transaction complete.");
-                    return "Transaction complete.";
+                    ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
                 }
             })
         }else{
@@ -450,6 +451,8 @@ let steal = async function(ctx,msg,args){
 
             await grace(ctx,u);
             await takepoint(ctx,msg.author);
+            
+            await ctx.db.models.analytics.update({econ_steal_succ:ctx.libs.sequelize.literal(`econ_steal_succ+1`)},{where:{id:1}});
 
             msg.channel.createMessage(`${msg.author.mention} Steal successful. Stole **${amt}FC**.\n\`res: ${res}, chance: ${chance}\``);
         }else{
@@ -461,6 +464,8 @@ let steal = async function(ctx,msg,args){
 
             await jail(ctx,msg.author);
             await takepoint(ctx,msg.author);
+            
+			await ctx.db.models.analytics.update({econ_steal_fail:ctx.libs.sequelize.literal(`econ_steal_fail+1`)},{where:{id:1}});
 
             msg.channel.createMessage(`${msg.author.mention} Steal failed. You are now jailed for **8 hours**.\n**${oof}FC** has been sent to **${msg.channel.guild.name}**'s taxbank.\n\`res: ${res}, chance: ${chance}\``);
         }
@@ -549,6 +554,35 @@ let heist = async function(ctx,msg,args){
 
 /* End Heist Code Stuffs */
 
+let fcstats = async function(ctx,msg,args){
+    let data = await ctx.db.models.econ.findAll();
+    let tdata = await ctx.db.models.taxbanks.findAll();
+    let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
+    
+    let fc = 0;
+    let fct = 0;
+    
+    data.forEach(d=>{
+        fc = fc+d.dataValues.currency;
+    });
+    tdata.forEach(d=>{
+        fct = fct+d.dataValues.currency;
+    });
+    
+    msg.channel.createMessage({embed:{
+        color:ctx.utils.topColor(ctx,msg,ctx.bot.user.id),
+        title:"HiddenPhox Economy Stats",
+        fields:[
+            {name:"Total Accounts",value:data.length,inline:true},
+            {name:"Total PhoxCoins in circulation",value:fc+"FC",inline:true},
+            {name:"Total Taxbanks",value:tdata.length,inline:true},
+            {name:"Total PhoxCoins in taxbanks",value:fct+"FC",inline:true},
+            {name:"Steal Successes",value:analytics.econ_steal_succ,inline:true},
+            {name:"Steal Fails",value:analytics.econ_steal_fail,inline:true}
+        ]
+    }});
+}
+
 module.exports = [
     {
         name:"account",
@@ -616,5 +650,12 @@ module.exports = [
         desc:"Get your stealing state.",
         func:sstate,
         group:"economy"
+    },
+    {
+        name:"fcstats",
+        desc:"HiddenPhox Economy Stats.",
+        func:fcstats,
+        group:"economy",
+        aliases:["estats","econstats"]
     }
 ];

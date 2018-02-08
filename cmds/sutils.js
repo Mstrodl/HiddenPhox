@@ -90,6 +90,16 @@ let roleme = async function(ctx,msg,args){
     let sub = args[0];
     let sargs = args.splice(1,args.length).join(" ");
 
+    let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
+    let rme = JSON.parse(data[0].dataValues.roleme) || [];
+
+    let rmefilter = function(r){
+        for(let i=0;i<rme.length;i++){
+            let role = rme[i];
+            if(r.id == role) return r;
+        }
+    }
+
     if(sub == "add"){
         if(!msg.channel.permissionsOf(msg.author.id).has("manageRoles")){
             msg.channel.createMessage("You do not have `Manage Roles` permission.");
@@ -100,7 +110,7 @@ let roleme = async function(ctx,msg,args){
             return;
         }
 
-        lookupRole(ctx, msg, sargs || "")
+        ctx.utils.lookupRole(ctx, msg, sargs || "")
         .then(async r=>{
             let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
             let rme = JSON.parse(data[0].dataValues.roleme) || [];
@@ -129,7 +139,7 @@ let roleme = async function(ctx,msg,args){
             return;
         }
 
-        lookupRole(ctx, msg, sargs || "")
+        ctx.utils.lookupRole(ctx, msg, sargs || "")
         .then(async r=>{
             let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
             let rme = JSON.parse(data[0].dataValues.roleme) || [];
@@ -153,7 +163,7 @@ let roleme = async function(ctx,msg,args){
             return;
         }
 
-        lookupRole(ctx, msg, sargs || "")
+        ctx.utils.lookupRole(ctx, msg, sargs || "",rmefilter)
         .then(async r=>{
             let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
             let rme = JSON.parse(data[0].dataValues.roleme) || [];
@@ -177,7 +187,7 @@ let roleme = async function(ctx,msg,args){
             return;
         }
 
-        lookupRole(ctx, msg, sargs || "")
+        ctx.utils.lookupRole(ctx, msg, sargs || "",rmefilter)
         .then(async r=>{
             let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
             let rme = JSON.parse(data[0].dataValues.roleme) || [];
@@ -318,8 +328,17 @@ let kick = function(ctx,msg,args){
         ctx.utils.lookupUser(ctx,msg,user || "")
         .then(u=>{
             try{
-                ctx.bot.kickGuildMember(msg.channel.guild.id,u.id,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
-                msg.channel.createMessage(":ok_hand:");
+                ctx.utils.awaitMessage(ctx,msg,`${msg.author.mention}, you're about to kick **${u.username}#${u.discriminator}** for reason \`${reason ? reason : "No reason given"}\`.\n\nTo confirm type \`yes\` otherwise type anything else.`,
+                m=>{
+                    if(m.content.toLowerCase() == "yes"){
+                        ctx.bot.kickGuildMember(msg.channel.guild.id,u.id,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
+                        msg.channel.createMessage(":ok_hand:");
+                        ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                    }else{
+                        msg.channel.createMessage("Kick aborted.");
+                        ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                    }
+                });
             }catch(e){
                 msg.channel.createMessage(`Could not kick:\n\`\`\`\n${e.message}\n\`\`\``);
                 ctx.utils.logWarn(ctx,"[kick] "+e.message);
@@ -352,8 +371,17 @@ let ban = function(ctx,msg,args){
         ctx.utils.lookupUser(ctx,msg,user || "")
         .then(u=>{
             try{
-                ctx.bot.banGuildMember(msg.channel.guild.id,u.id,0,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
-                msg.channel.createMessage(":ok_hand:");
+                ctx.utils.awaitMessage(ctx,msg,`${msg.author.mention}, you're about to ban **${u.username}#${u.discriminator}** for reason \`${reason ? reason : "No reason given"}\`.\n\nTo confirm type \`yes\` otherwise type anything else.`,
+                m=>{
+                    if(m.content.toLowerCase() == "yes"){
+                        ctx.bot.banGuildMember(msg.channel.guild.id,u.id,0,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
+                        msg.channel.createMessage(":ok_hand:");
+                        ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                    }else{
+                        msg.channel.createMessage("Ban aborted.");
+                        ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                    }
+                });
             }catch(e){
                 msg.channel.createMessage(`Could not ban:\n\`\`\`\n${e.message}\n\`\`\``);
                 ctx.utils.logWarn(ctx,"[ban] "+e.message);

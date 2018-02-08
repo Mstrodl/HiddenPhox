@@ -1,4 +1,4 @@
-const request = require('snekfetch');
+const request = require('superagent');
 const cheerio = require('cheerio');
 const xpath = require('xpath');
 const DOM = require('xmldom').DOMParser;
