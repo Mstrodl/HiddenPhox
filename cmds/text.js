@@ -96,7 +96,7 @@ let dancesay = function(ctx,msg,args){
 
         let inp = ctx.utils.safeString(args).split("");
         let out = ""
-        for (x in inp){
+        for (let x in inp){
             if(inp[x].toLowerCase() == " " || inp[x].toLowerCase() == ":"){
                 out += "<:blankboi:393555375389016065>";
             }else{
@@ -114,7 +114,7 @@ let fullwidth = function(ctx,msg,args){
     }else{
         let inp = ctx.utils.safeString(args).split("");
         let out = ""
-        for (x in inp){
+        for (let x in inp){
             out += fwcharmap[inp[x]] || inp[x];
         }
 
@@ -133,7 +133,7 @@ let bunnysay = function(ctx,msg,args){
         let err = "Please use with some text.";
         let inp = ctx.utils.safeString(err).split("");
         let out = ""
-        for (x in inp){
+        for (let x in inp){
             out += fwcharmap[inp[x]] || inp[x];
         }
 
@@ -147,7 +147,7 @@ let bunnysay = function(ctx,msg,args){
     }else{
         let inp = ctx.utils.safeString(args).split("");
         let out = ""
-        for (x in inp){
+        for (let x in inp){
             out += fwcharmap[inp[x]] || inp[x];
         }
 
@@ -167,7 +167,7 @@ let bubblesay = function(ctx,msg,args){
     }else{
         let inp = ctx.utils.safeString(args).split("");
         let out = ""
-        for (x in inp){
+        for (let x in inp){
             out += bubblemap[inp[x]] || inp[x];
         }
 

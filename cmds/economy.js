@@ -47,19 +47,19 @@ let top = async function(ctx,msg,args){
             return 0;
         });
 
-        list = list.splice(0,9);
+        list = list.splice(0,10);
 
-        let _list = [];
+        let _list = new ctx.utils.table(["#","User","Currency"]);
         for(let i = 0;i < list.length;i++){
             let u = ctx.bot.users.get(list[i].id);
             if(u){
-                _list.push(`${i+1}. ${u.username}#${u.discriminator} - ${list[i].currency}FC`);
+                _list.addRow([i+1,`${u.username}#${u.discriminator}`,`${list[i].currency}FC`]);
             }else{
-                _list.push(`${i+1}. Uncached (${list[i].id}) - ${list[i].currency}FC`);
+                _list.addRow([i+1,`Uncached User (${u.id})`,`${list[i].currency}FC`]);
             }
         }
 
-        msg.channel.createMessage(`__**Top 10 People with Most PhoxCoins [Global]**__\`\`\`\n${_list.join("\n")}\`\`\``);
+        msg.channel.createMessage(`__**Top 10 People with Most PhoxCoins [Global]**__\`\`\`\n${_list.render()}\`\`\``);
     }else if(args == "l" || args == "local"){
         if(!msg.channel.guild){
             msg.channel.createMessage(`Not in a guild`);
@@ -80,15 +80,15 @@ let top = async function(ctx,msg,args){
             return 0;
         });
 
-        list = list.splice(0,9);
+        list = list.splice(0,10);
 
-        let _list = [];
+        let _list = new ctx.utils.table(["#","User","Currency"]);
         for(let i = 0;i < list.length;i++){
             let u = msg.channel.guild.members.get(list[i].id);
-            _list.push(`${i+1}. ${u.user.username}#${u.user.discriminator} - ${list[i].currency}FC`);
+            _list.addRow([i+1,`${u.user.username}#${u.user.discriminator}`,`${list[i].currency}FC`]);
         }
 
-        msg.channel.createMessage(`__**Top 10 People with Most PhoxCoins [Local]**__\`\`\`\n${_list.join("\n")}\`\`\``);
+        msg.channel.createMessage(`__**Top 10 People with Most PhoxCoins [Local]**__\`\`\`\n${_list.render()}\`\`\``);
     }else if(args == "t" || args == "taxbanks"){
         let list = await ctx.db.models.taxbanks.findAll();
 
@@ -102,19 +102,19 @@ let top = async function(ctx,msg,args){
             return 0;
         });
 
-        list = list.splice(0,9);
+        list = list.splice(0,10);
 
-        let _list = [];
+        let _list = new ctx.utils.table(["#","Guild","Currency"]);
         for(let i = 0;i < list.length;i++){
             let g = ctx.bot.guilds.get(list[i].id);
             if(g){
-                _list.push(`${i+1}. ${g.name} - ${list[i].currency}FC`);
+                _list.addRow([i+1,g.name,`${list[i].currency}FC`]);
             }else{
-                _list.push(`${i+1}. Uncached/Left (${list[i].id}) - ${list[i].currency}FC`);
+                _list.addRow([i+1,`Uncached/Left Guild (${list[i].id})`,`${list[i].currency}FC`]);
             }
         }
 
-        msg.channel.createMessage(`__**Top 10 Taxbanks**__\`\`\`\n${_list.join("\n")}\`\`\``);
+        msg.channel.createMessage(`__**Top 10 Taxbanks**__\`\`\`\n${_list.render()}\`\`\``);
     }
 }
 

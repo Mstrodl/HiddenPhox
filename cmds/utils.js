@@ -3,12 +3,12 @@ let statusIcons = {
     idle:"<:away:313956277220802560>",
     dnd:"<:dnd:313956276893646850>",
     offline:"<:offline:313956277237710868>"
-}
+};
 
 let elevated = [
     "132297363233570816",
     "151344471957569536"
-]
+];
 
 let _eval = async function(ctx,msg,args){
     if(msg.author.id === ctx.ownerid || elevated.includes(msg.author.id)){
@@ -32,14 +32,15 @@ let _eval = async function(ctx,msg,args){
         }else{
             if ((out.toString()).length > 1980){
                 let output = out.toString();
-                ctx.libs.request.post("https://hastebin.com/documents",{body:output},function(err,res,body){
-                    if(res.statusCode == 200){
-                        let key = JSON.parse(body).key;
-                        msg.channel.createMessage(`\u2705 Output too long to send in a message: https://hastebin.com/${key}.js`);
-                    }else{
-                        msg.channel.createMessage(":warning: Cannot upload output to Hastebin.");
-                    }
+                ctx.libs.superagent.post("https://hastebin.com/documents")
+                .send(output)
+                .then(res=>{
+                    let key = JSON.parse(res.body).key;
+                    msg.channel.createMessage(`\u2705 Output too long to send in a message: https://hastebin.com/${key}.js`);
                 })
+                .catch(e=>{
+                    msg.channel.createMessage(`Could not upload output to Hastebin.`);
+                });
             }else{
                 msg.channel.createMessage("\u2705 Output:\n```js\n"+out+"\n```");
             }
@@ -79,7 +80,7 @@ let reload = function (ctx, msg, args) {
                 msg.channel.createMessage(`:warning: Error reloading: \`${e.message}\``);
             }
         } else {
-            msg.channel.createMessage("Command not found.")
+            msg.channel.createMessage("Command not found.");
         }
     } else {
         msg.channel.createMessage("No permission.");
@@ -88,13 +89,13 @@ let reload = function (ctx, msg, args) {
 
 let ereload = function(ctx,msg,args){
     if (msg.author.id === "150745989836308480") {
-        if (ctx.libs.fs.existsSync(__dirname + "/" + args + ".js")) {
+        if (ctx.libs.fs.existsSync(__dirname + "/../events/" + args + ".js")) {
             try {
                 let e = ctx.libs.reload(__dirname + "/../events/" + args + ".js");
 
                 if(e.event && e.func && e.name){
-                    let _e = ctx.events.get(e.event+"|"+e.name)
-                    ctx.bot.removeListener(e.event,_e.func)
+                    let _e = ctx.events.get(e.event+"|"+e.name);
+                    if(_e) ctx.bot.removeListener(e.event,_e.func);
                     ctx.events.set(e.event+"|"+e.name,e);
                     ctx.utils.createEvent(ctx.bot,e.event,e.func,ctx);
                     ctx.utils.logInfo(ctx,`Reloaded event: ${e.event}|${e.name} (${args})`);
@@ -102,8 +103,8 @@ let ereload = function(ctx,msg,args){
                     for(let i=0;i<e.length;i++){
                         let a = e[i];
                         if(a.event && a.func && a.name){
-                            let _e = ctx.events.get(a.event+"|"+a.name)
-                            ctx.bot.removeListener(a.event,_e.func)
+                            let _e = ctx.events.get(a.event+"|"+a.name);
+                            if(_e) ctx.bot.removeListener(a.event,_e.func);
                             ctx.events.set(a.event+"|"+a.name,a);
                             ctx.utils.createEvent(ctx.bot,a.event,a.func,ctx);
                             ctx.utils.logInfo(ctx,`Reloaded event: ${a.event}|${a.name} (${args})`);
@@ -115,7 +116,7 @@ let ereload = function(ctx,msg,args){
                 msg.channel.createMessage(`:warning: Error reloading: \`${e.message}\``);
             }
         } else {
-            msg.channel.createMessage("Event not found.")
+            msg.channel.createMessage("Event not found.");
         }
     } else {
         msg.channel.createMessage("No permission.");
@@ -142,7 +143,7 @@ let avatar = function(ctx,msg,args){
     .then(u=>{
         let av = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif?size=1024&_=.gif" : "png?size=1024")}`;
         msg.channel.createMessage({embed:{title:`Avatar for **${u.username}#${u.discriminator}**:`,image:{url:av}}});
-    })
+    });
 }
 
 let cflake = function(ctx,msg,args){
@@ -158,56 +159,42 @@ let cflake = function(ctx,msg,args){
     }
 }
 
-let linvite = function(ctx,msg,args){
-    let options = {
-        url:`https://discordapp.com/api/v6/invites/${args}?with_counts=1`,
-        headers:{
-            "User-Agent":"FlexBot (version 9, Eris)",
-            "Content-Type":"application/json",
-            "Authorization":ctx.bot.token
+let linvite = async function(ctx,msg,args){
+    let data = await ctx.libs.superagent.get(`https://discordapp.com/api/v7/invites/${args}?with_counts=1`).set("User-Agent","HiddenPhox (v9, Eris)").set("Content-Type","application/json").set("Authorization",ctx.bot.token);
+    let inv = data.body;
+
+    if(inv.message && inv.message == "Unknown Invite"){
+        msg.channel.createMessage("Invite provided is not valid.");
+    }else if(inv.guild && inv.channel){
+        let edata = {
+            title:`Invite Info: \`${inv.code}\``,
+            fields:[
+                {name:"Guild",value:`**${inv.guild.name}** (${inv.guild.id})`,inline:true},
+                {name:"Channel",value:`**#${inv.channel.name}** (${inv.channel.id})`,inline:true},
+                {name:"Partnered?",value:(inv.guild.features.includes("VANITY_URL") || inv.guild.features.includes("INVITE_SPLASH") || inv.guild.features.includes("VIP_REGIONS")) ? "Yes" : "No",inline:true},
+                {name:"Verified?",value:inv.guild.features.includes("VERIFIED") ? "Yes" : "No",inline:true},
+                {name:"Channel Count",value:`${inv.guild.text_channel_count} text, ${inv.guild.voice_channel_count} voice`,inline:true},
+                {name:"Member Count (aprox.)",value:`${inv.approximate_member_count} members, ${inv.approximate_presence_count} online`,inline:true},
+            ],
+            thumbnail:{url:`https://cdn.discordapp.com/icons/${inv.guild.id}/${inv.guild.icon}.png`}
         }
-    };
 
-    ctx.libs.request.get(options,function(err,res,body){
-        if(!err && res.statusCode == 200 || res.statusCode == 404){
-            let inv = JSON.parse(body);
-
-            if(inv.message && inv.message == "Unknown Invite"){
-                msg.channel.createMessage("Invite provided is not valid.");
-            }else if(inv.guild && inv.channel){
-                let edata = {
-                    title:`Invite Info: \`${inv.code}\``,
-                    fields:[
-                        {name:"Guild",value:`**${inv.guild.name}** (${inv.guild.id})`,inline:true},
-                        {name:"Channel",value:`**#${inv.channel.name}** (${inv.channel.id})`,inline:true},
-                        {name:"Partnered?",value:(inv.guild.features.includes("VANITY_URL") || inv.guild.features.includes("INVITE_SPLASH") || inv.guild.features.includes("VIP_REGIONS")) ? "Yes" : "No",inline:true},
-                        {name:"Verified?",value:inv.guild.features.includes("VERIFIED") ? "Yes" : "No",inline:true},
-                        {name:"Channel Count",value:`${inv.guild.text_channel_count} text, ${inv.guild.voice_channel_count} voice`,inline:true},
-                        {name:"Member Count (aprox.)",value:`${inv.approximate_member_count} members, ${inv.approximate_presence_count} online`,inline:true},
-                    ],
-                    thumbnail:{url:`https://cdn.discordapp.com/icons/${inv.guild.id}/${inv.guild.icon}.png`}
-                }
-
-                if(inv.inviter){
-                    edata.fields.push({name:"Inviter",value:`**${inv.inviter.username}#${inv.inviter.discriminator}** (${inv.inviter.id})`,inline:true});
-                }
-
-                if(inv.guild.features.length > 0){
-                	edata.fields.push({name:"Flags",value:`\`\`\`${inv.guild.features.join(", ")}\`\`\``,inline:false});
-                }
-
-                edata.fields.push({name:"\u200b",value:`[Icon](https://cdn.discordapp.com/icons/${inv.guild.id}/${inv.guild.icon}.png?size=1024)${inv.guild.splash !== null ? " | [Splash](https://cdn.discordapp.com/splashes/${inv.guild.id}/${inv.guild.splash}.png?size=2048)" : ""}`,inline:false});
-
-                if(inv.guild.splash !== null){
-                    edata.image = {url:`https://cdn.discordapp.com/splashes/${inv.guild.id}/${inv.guild.splash}.png?size=256`}
-                }
-
-                msg.channel.createMessage({embed:edata});
-            }
-        }else{
-            msg.channel.createMessage(`An error has occured.\n\`\`\`\nStatus code: ${res.statusCode}\nError:\n${err}\n\`\`\``);
+        if(inv.inviter){
+            edata.fields.push({name:"Inviter",value:`**${inv.inviter.username}#${inv.inviter.discriminator}** (${inv.inviter.id})`,inline:true});
         }
-    });
+
+        if(inv.guild.features.length > 0){
+        	edata.fields.push({name:"Flags",value:`\`\`\`${inv.guild.features.join(", ")}\`\`\``,inline:false});
+        }
+
+        edata.fields.push({name:"\u200b",value:`[Icon](https://cdn.discordapp.com/icons/${inv.guild.id}/${inv.guild.icon}.png?size=1024)${inv.guild.splash !== null ? " | [Splash](https://cdn.discordapp.com/splashes/${inv.guild.id}/${inv.guild.splash}.png?size=2048)" : ""}`,inline:false});
+
+        if(inv.guild.splash !== null){
+            edata.image = {url:`https://cdn.discordapp.com/splashes/${inv.guild.id}/${inv.guild.splash}.png?size=256`}
+        }
+
+        msg.channel.createMessage({embed:edata});
+    }
 }
 
 let mods = function(ctx,msg,args){
@@ -247,87 +234,85 @@ let mods = function(ctx,msg,args){
     }
 }
 
-let binfo = function(ctx,msg,args){
-    ctx.utils.lookupUser(ctx,msg,args || msg.author.mention)
-    .then(u=>{
-        if(u.bot){
-            ctx.libs.request.get("https://bots.discord.pw/api/bots/"+u.id,{headers:{"Authorization":ctx.apikeys.dbots}},(err,res,body)=>{
-                if(!err && res.statusCode == 200){
-                    let data = JSON.parse(body);
-
-                    let owners = [];
-                    for(let b in data["owner_ids"]){
-                        owners.push(`<@${data["owner_ids"][b]}>`);
-                    };
-
-                    let edata = {
-                        color:0x7289DA,
-
-                        title:`Bot Info: \`${u.username}#${u.discriminator}\``,
-                        description:data.description,
-                        fields:[
-                            {name:"ID",value:u.id,inline:true},
-                            {name:"Owner(s)",value:owners.join("\n"),inline:true},
-                            {name:"Library",value:data.library,inline:true},
-                            {name:"Prefix",value:"`"+data.prefix+"`",inline:true},
-                        ],
-                        footer:{
-                            text:"Info provided by bots.discord.pw",
-                        },
-                        thumbnail:{
-                            url:"https://cdn.discordapp.com/avatars/"+u.id+"/"+u.avatar
-                        }
-                    }
-
-                    if(data.invite_url !== null){
-                        edata.fields.push({name:"Invite",value:"[Click For Invite]("+data.invite_url+")",inline:true});
-                    }
-
-                    msg.channel.createMessage({embed:edata})
-                }else{
-                    let data = JSON.parse(body);
-                    if(data.error == "Bot user ID not found"){
-                        msg.channel.createMessage("No bot info found, may not be on botlist.")
-                    }else{
-                        msg.channel.createMessage("An error occured.")
-                    }
-                }
-            });
-        }else{
-            ctx.libs.request.get("https://bots.discord.pw/api/users/"+u.id,{headers:{"Authorization":ctx.apikeys.dbots}},async (err,res,body)=>{
-            if(!err && res.statusCode == 200){
-                let data = JSON.parse(body);
-                let bots = [];
-                for(let b in data.bots){
-                    bots.push(`<@${data.bots[b].user_id}>`)
-                }
-
-                let edata = {
-                    color:0x7289DA,
-
-                    title:`Bots for user: \`${u.username}#${u.discriminator}\``,
-                    description:`**${u.username}#${u.discriminator}** owns **${bots.length} bot(s)**:\n\n`+bots.join("\n"),
-                    thumbnail:{
-                        url:"https://cdn.discordapp.com/avatars/"+u.id+"/"+u.avatar
-                    }
-                }
-
-                msg.channel.createMessage({embed:edata})
-            }else{
-                let data = JSON.parse(body);
-                if(data.error == "User ID not found"){
-                    msg.channel.createMessage(`No bots found for **${u.username}#${u.discriminator}**`);
-                }else{
-                    msg.channel.createMessage("An error occured.");
-                }
-            }
-        });
-        }
-    }).catch(m=>{
+let binfo = async function(ctx,msg,args){
+    let u = await ctx.utils.lookupUser(ctx,msg,args || msg.author.mention).catch(m=>{
         if(m == "No results." || m == "Canceled"){
             msg.channel.createMessage(m);
         }
     });
+    
+    if(u.bot){
+        let req = await ctx.libs.superagent.get(`https://bots.discord.pw/api/bots/${u.id}`).set("Authorization",ctx.apikeys.dbots);
+        let data = req.body;
+        
+        if(data.error){
+            if(data.error == "Bot user ID not found"){
+                msg.channel.createMessage("No bot info found, may not be on botlist.")
+            }else{
+                msg.channel.createMessage("An error occured.")
+            }
+            return;
+        }
+
+        let owners = [];
+        for(let b in data["owner_ids"]){
+            owners.push(`<@${data["owner_ids"][b]}>`);
+        };
+
+        let edata = {
+            color:0x7289DA,
+
+            title:`Bot Info: \`${u.username}#${u.discriminator}\``,
+            description:data.description,
+            fields:[
+                {name:"ID",value:u.id,inline:true},
+                {name:"Owner(s)",value:owners.join("\n"),inline:true},
+                {name:"Library",value:data.library,inline:true},
+                {name:"Prefix",value:"`"+data.prefix+"`",inline:true},
+            ],
+            footer:{
+                text:"Info provided by bots.discord.pw",
+            },
+            thumbnail:{
+                url:"https://cdn.discordapp.com/avatars/"+u.id+"/"+u.avatar
+            }
+        };
+
+        if(data.invite_url !== null){
+            edata.fields.push({name:"Invite",value:"[Click For Invite]("+data.invite_url+")",inline:true});
+        }
+
+        msg.channel.createMessage({embed:edata});
+    }else{
+        let req = await ctx.libs.superagent.get(`https://bots.discord.pw/api/users/${u.id}`).set("Authorization",ctx.apikeys.dbots);
+        let data = req.body;
+        
+        if(data.error){
+            if(data.error == "User ID not found"){
+                msg.channel.createMessage(`No bots found for **${u.username}#${u.discriminator}**`);
+            }else{
+                msg.channel.createMessage("An error occured.");
+            }
+            return;
+        }
+        
+        let bots = [];
+        for(let b in data.bots){
+            bots.push(`<@${data.bots[b].user_id}>`)
+        }
+
+        let edata = {
+            color:0x7289DA,
+
+            title:`Bots for user: \`${u.username}#${u.discriminator}\``,
+            description:`**${u.username}#${u.discriminator}** owns **${bots.length} bot(s)**:\n\n`+bots.join("\n"),
+            thumbnail:{
+                url:"https://cdn.discordapp.com/avatars/"+u.id+"/"+u.avatar
+            }
+        }
+
+        msg.channel.createMessage({embed:edata});
+    }
 }
 
 let ptypes = [
@@ -335,7 +320,7 @@ let ptypes = [
 	"Streaming",
 	"Listening to",
 	"Watching"
-]
+];
 
 let uinfo = function(ctx,msg,args){
     ctx.utils.lookupUser(ctx,msg,args || msg.member.mention)
@@ -517,7 +502,7 @@ let rinfo = function(ctx,msg,args){
     });
 }
 
-let setav = function(ctx,msg,args){
+let setav = async function(ctx,msg,args){
     if(msg.author.id === "150745989836308480"){
         let url;
         if(args && args.indexOf("http")>-1){
@@ -529,14 +514,12 @@ let setav = function(ctx,msg,args){
     		return;
     	}
 
-    	ctx.libs.request.get(url,function(e,res,body){
-			if(!e && res.statusCode == 200){
-				let data = "data:"+res.headers["content-type"]+";base64,"+new Buffer(body).toString("base64");
-				ctx.bot.editSelf({avatar:data})
-				.then(()=>{
-					msg.channel.createMessage(emoji.get(":white_check_mark:")+" Avatar set.");
-				});
-			}
+    	let req = await ctx.libs.request.get(url);
+    	
+		let data = `data:${res.headers["content-type"]};base64${new Buffer(req.text).toString("base64")}`;
+		ctx.bot.editSelf({avatar:data})
+		.then(()=>{
+			msg.channel.createMessage(emoji.get(":white_check_mark:")+" Avatar set.");
 		});
     }else{
         msg.channel.createMessage("No permission.");
@@ -744,7 +727,8 @@ module.exports = [
         desc:"Lookup an invite",
         func:linvite,
         usage: "<invite>",
-        group:"utils"
+        group:"utils",
+        aliases:["linvite"]
     },
     {
         name:"mods",

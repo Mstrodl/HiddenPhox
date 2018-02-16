@@ -7,24 +7,36 @@ let calc = function(ctx,msg,args){
 	msg.channel.createMessage("Result: "+parser.parse(exp).evaluate({x:_x}));
 }
 
-let yt = function(ctx,msg,args){
+let yt = async function(ctx,msg,args){
     if(!args){
         msg.channel.createMessage("Arguments are required!");
     }else{
-        ctx.libs.request.get("https://www.googleapis.com/youtube/v3/search?key="+ctx.apikeys.google+"&maxResults=5&part=snippet&type=video&q="+encodeURIComponent(args),(err,res,body)=>{
-            if(!err && res.statusCode == 200){
-                let data = JSON.parse(body).items;
-
-                let others = [];
-                for(let i=1;i<data.length;i++){
-                    others.push(`- **${data[i].snippet.title}** | By: \`${data[i].snippet.channelTitle}\` | <https://youtu.be/${data[i].id.videoId}>`);
-                }
-
-                msg.channel.createMessage(`**${data[0].snippet.title}** | \`${data[0].snippet.channelTitle}\`\nhttps://youtu.be/${data[0].id.videoId}\n\n**__See Also:__**\n${others.join("\n")}`);
-            }else{
-                msg.channel.createMessage("An error occured getting data from YouTube.");
-            }
+        let req = await ctx.libs.superagent.get(`https://www.googleapis.com/youtube/v3/search?key=${ctx.apikeys.google}&maxResults=5&part=snippet&type=video&q=${encodeURIComponent(args)}`)
+        .catch(e=>{
+            msg.channel.createMessage("An error occured getting data from YouTube.");
         });
+        let data = req.body.items;
+
+        let others = [];
+        for(let i=1;i<data.length;i++){
+            others.push(`- **${data[i].snippet.title}** | By: \`${data[i].snippet.channelTitle}\` | <https://youtu.be/${data[i].id.videoId}>`);
+        }
+
+        msg.channel.createMessage(`**${data[0].snippet.title}** | \`${data[0].snippet.channelTitle}\`\nhttps://youtu.be/${data[0].id.videoId}\n\n**__See Also:__**\n${others.join("\n")}`);
+    }
+}
+
+let fyt = async function(ctx,msg,args){
+    if(!args){
+        msg.channel.createMessage("Arguments are required!");
+    }else{
+        let req = await ctx.libs.superagent.get(`https://www.googleapis.com/youtube/v3/search?key=${ctx.apikeys.google}&maxResults=2&part=snippet&type=video&q=${encodeURIComponent(args)}`)
+        .catch(e=>{
+            msg.channel.createMessage("An error occured getting data from YouTube.");
+        });
+        let data = req.body.items;
+
+        msg.channel.createMessage(`**${data[0].snippet.title}** | \`${data[0].snippet.channelTitle}\`\nhttps://youtu.be/${data[0].id.videoId}`);
     }
 }
 
@@ -59,7 +71,7 @@ let gimg = function(ctx,msg,args){
                 url:image.hostPageUrl,
                 image:{url:image.contentUrl}
             }});
-        })
+        });
     }
 }
 
@@ -138,6 +150,33 @@ let vote = function(ctx,msg,args){
     }
 }
 
+let cmdstats = async function(ctx,msg,args){
+    let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
+	let usage = JSON.parse(analytics.dataValues.cmd_usage);
+	let names = Object.keys(usage);
+	
+	let toSort = [];
+	
+	for(let i in names){
+	    toSort.push({name:names[i],value:usage[names[i]]});
+	}
+	
+	let sorted = toSort.sort((a,b)=>{
+	    if (a.value < b.value) return 1;
+	    if (a.value > b.value) return -1;
+	    return 0;
+	});
+	
+	sorted = sorted.splice(0,10);
+	
+	let _list = new ctx.utils.table(["#","Command","Usages"]);
+    for(let i in sorted){
+        _list.addRow([parseInt(i)+1,`${ctx.prefix}${sorted[i].name}`,`${sorted[i].value}`]);
+    }
+
+    msg.channel.createMessage(`__**Top 10 Used Commands**__\`\`\`\n${_list.render()}\`\`\``);
+}
+
 module.exports = [
     {
         name:"calc",
@@ -149,6 +188,12 @@ module.exports = [
         name:"yt",
         desc:"Search YouTube.",
         func:yt,
+        group:"misc"
+    },
+    {
+        name:"fyt",
+        desc:"Search YouTube and grab first result only.",
+        func:fyt,
         group:"misc"
     },
     {
@@ -174,6 +219,12 @@ module.exports = [
         name:"vote",
         desc:"Start a yes/no vote",
         func:vote,
+        group:"fun"
+    },
+    {
+        name:"cmdstats",
+        desc:"Analytics.",
+        func:cmdstats,
         group:"fun"
     }
 ]

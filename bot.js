@@ -12,7 +12,8 @@ ctx.libs = {
 	fs:require("fs"),
 	reload:require("require-reload")(require),
 	math:require("expr-eval").Parser,
-	sequelize:require("sequelize")
+	sequelize:require("sequelize"),
+	superagent:require("superagent")
 };
 
 ctx.utils = require("./utils.js");
@@ -57,7 +58,7 @@ client.on("ready",()=>{
 		c.createMessage(":white_check_mark: Loaded HiddenPhox.");
 	});
 
-	ctx.libs.request.post("https://bots.discord.pw/api/bots/"+ctx.bot.user.id+"/stats",{headers:{"Authorization":ctx.apikeys.dbots},json:{server_count:ctx.bot.guilds.size}});
+	ctx.libs.superagent.post(`https://bots.discord.pw/api/bots/${ctx.bot.user.id}/stats`).set("Authorization",ctx.apikeys.dbots).send({server_count:ctx.bot.guilds.size});
 
 	ctx.bot.guilds.forEach(g=>{
 		g.emojis.forEach(e=>{
@@ -71,7 +72,7 @@ client.on("guildCreate",function(guild){
 	let bots = 0;
 	guild.members.forEach(m=>{if(m.bot) ++bots;})
 
-	ctx.libs.request.post("https://bots.discord.pw/api/bots/"+ctx.bot.user.id+"/stats",{headers:{"Authorization":ctx.apikeys.dbots},json:{server_count:ctx.bot.guilds.size}});
+	ctx.libs.superagent.post(`https://bots.discord.pw/api/bots/${ctx.bot.user.id}/stats`).set("Authorization",ctx.apikeys.dbots).send({server_count:ctx.bot.guilds.size});
 	ctx.utils.logInfo(ctx,`Joined Guild: '${guild.name}' (${guild.id}) | Percentage: ${Math.floor((bots/guild.memberCount)*100)}%, Bots: ${bots}, Humans: ${guild.memberCount-bots}, Total: ${guild.memberCount} | Now in ${ctx.bot.guilds.size} guilds.`);
 
 	if(bots >= 50 && Math.floor((bots/guild.memberCount)*100) >= 70){
@@ -81,7 +82,7 @@ client.on("guildCreate",function(guild){
 });
 
 client.on("guildDelete",function(guild){
-	ctx.libs.request.post("https://bots.discord.pw/api/bots/"+ctx.bot.user.id+"/stats",{headers:{"Authorization":ctx.apikeys.dbots},json:{server_count:ctx.bot.guilds.size}});
+	ctx.libs.superagent.post(`https://bots.discord.pw/api/bots/${ctx.bot.user.id}/stats`).set("Authorization",ctx.apikeys.dbots).send({server_count:ctx.bot.guilds.size});
 	ctx.utils.logInfo(ctx,`Left Guild: '${guild.name}' (${guild.id}) | Now in ${ctx.bot.guilds.size} guilds.`);
 });
 
@@ -157,7 +158,7 @@ client.on("messageCreate",msg=>{
 				let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
 				let usage = JSON.parse(analytics.dataValues.cmd_usage);
 				
-				usage[c.name] = usage[c.name] ? usage[c.name]++ : 1;
+				usage[c.name] = usage[c.name] ? usage[c.name]+1 : 1;
 				
 				await ctx.db.models.analytics.update({cmd_usage:JSON.stringify(usage)},{where:{id:1}});
 				
@@ -177,7 +178,7 @@ client.on("messageCreate",msg=>{
 				let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
 				let usage = JSON.parse(analytics.dataValues.cmd_usage);
 				
-				usage[c.name] = usage[c.name] ? usage[c.name]++ : 1;
+				usage[c.name] = usage[c.name] ? usage[c.name]+1 : 1;
 				
 				await ctx.db.models.analytics.update({cmd_usage:JSON.stringify(usage)},{where:{id:1}});
 				
@@ -187,10 +188,10 @@ client.on("messageCreate",msg=>{
 	}
 });
 
-process.on("unhandledRejection",e=>{
+process.on("unhandledRejection",(e,p)=>{
 	//console.log("Uncaught rejection: "+e.message);
 	if (e.length > 1900) {
-		ctx.libs.request.post("https://hastebin.com/documents",{body:e},function(err,res,body){
+		ctx.libs.request.post("https://hastebin.com/documents",{body:`${e} (${p})`},function(err,res,body){
 			if(res.statusCode == 200){
 				let key = JSON.parse(body).key;
 				ctx.utils.logWarn(ctx,`Uncaught rejection: Output too long to send in a message: https://hastebin.com/${key}.js`);

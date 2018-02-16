@@ -289,9 +289,8 @@ let sconfig = async function(ctx,msg,args){
             return;
         }
 
-        let isKey = keys.map(k=>k.name == val)[0];
-        if(!isKey){
-            msg.channel.createMessage(`Cannot find specified key \`${key}\`. Do \`${prefix}config list\` for valid keys.`);
+        if(keys.find(k=>k.name == val) == "undefined"){
+            msg.channel.createMessage(`Cannot find specified key \`${key}\`. Do \`${ctx.prefix}config list\` for valid keys.`);
             return;
         }
 

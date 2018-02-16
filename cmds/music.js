@@ -132,34 +132,35 @@ let doMusicThingsOk = async function(id,url,type,msg,ctx){
     }
 }
 
-let doSearchThingsOk = function(id,str,msg,ctx){
-    ctx.libs.request.get("https://www.googleapis.com/youtube/v3/search?key="+ctx.apikeys.google+"&maxResults=5&part=snippet&type=video&q="+encodeURIComponent(str).replace(/\//g,"%2F"),(err,res,body)=>{
-		if(!err && res.statusCode == 200){
-            let data = JSON.parse(body).items;
+let doSearchThingsOk = async function(id,str,msg,ctx){
+    let req = await ctx.libs.superagent.get(`https://www.googleapis.com/youtube/v3/search?key=${ctx.apikeys.google}&maxResults=5&part=snippet&type=video&q=${encodeURIComponent(args)}`)
+    let data = req.body.items;
 
-            let m = "Please type a number to choose your selection\n```ini\n";
+    let m = "Please type a number to choose your selection\n```ini\n";
 
-            for(let i=0;i<data.length;i++){
-                m = m + `[${i+1}] ${data[i].snippet.title} from ${data[i].snippet.channelTitle}\n`;
-            }
+    for(let i=0;i<data.length;i++){
+        m = m + `[${i+1}] ${data[i].snippet.title} from ${data[i].snippet.channelTitle}\n`;
+    }
 
-            m = m + "\n[c] Cancel\n```";
+    m = m + "\n[c] Cancel\n```";
 
-            ctx.utils.awaitMessage(ctx,msg,m,_msg=>{
-                let value = parseInt(_msg.content);
-                if(_msg.content == "c"){
-                    msg.channel.createMessage("Canceled.");
-                    ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
-                }else if(_msg.content == value){
-                    let vid = data[value-1];
-                    ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+    ctx.utils.awaitMessage(ctx,msg,m,_msg=>{
+        let value = parseInt(_msg.content);
+        if(_msg.content == "c"){
+            ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+            _msg.delete().catch(()=>{return;});
+            msg.channel.createMessage("Canceled.");
+            ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+        }else if(_msg.content == value){
+            ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+            _msg.delete().catch(()=>{return;});
+            let vid = data[value-1];
+            ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
 
-                    doMusicThingsOk(id,"https://youtu.be/"+vid.id.videoId,"yt",msg,ctx);
-                }
-                clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
-            },30000);
+            doMusicThingsOk(id,"https://youtu.be/"+vid.id.videoId,"yt",msg,ctx);
         }
-    });
+        clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
+    },30000);
 }
 
 let func = function(ctx,msg,args){

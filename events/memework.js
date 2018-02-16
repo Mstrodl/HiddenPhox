@@ -1,4 +1,4 @@
-let guildMemberAdd = function(guild,user,ctx){
+/*let guildMemberAdd = function(guild,user,ctx){
     if(guild.id == "295341979800436736"){
         if(user.bot) return;
 
@@ -28,4 +28,4 @@ module.exports = [
 		name:"MWJoinMsg",
 		func:guildMemberAdd
     }
-]
+]*/

@@ -1,25 +1,90 @@
 let jimp = require("jimp");
 let c2c = require("colorcolor");
 
-let _hooh = function(msg,url){
-	jimp.read(url)
-	.then(im=>{
-		let a = im.clone();
-		let b = im.clone();
-
-		a.crop(0,im.bitmap.height/2,im.bitmap.width,im.bitmap.height/2);
-		b.crop(0,im.bitmap.height/2,im.bitmap.width,im.bitmap.height/2);
-		b.mirror(false,true);
-
-		let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
-			i.composite(a,0,im.bitmap.height/2);
-			i.composite(b,0,0);
-		});
-
-		out.getBuffer(jimp.MIME_PNG,(e,f)=>{
-			msg.channel.createMessage("",{name:"hooh.png",file:f});
-		});
-	});
+let mirror = function(msg,url,type){
+	switch (type){
+		case 1: //hooh
+			jimp.read(url)
+			.then(im=>{
+				let a = im.clone();
+				let b = im.clone();
+		
+				a.crop(0,im.bitmap.height/2,im.bitmap.width,im.bitmap.height/2);
+				b.crop(0,im.bitmap.height/2,im.bitmap.width,im.bitmap.height/2);
+				b.mirror(false,true);
+		
+				let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
+					i.composite(a,0,im.bitmap.height/2);
+					i.composite(b,0,0);
+				});
+		
+				out.getBuffer(jimp.MIME_PNG,(e,f)=>{
+					msg.channel.createMessage("",{name:"hooh.png",file:f});
+				});
+			});
+			break;
+		case 2: //haah
+			jimp.read(url)
+			.then(im=>{
+				let a = im.clone();
+				let b = im.clone();
+		
+				a.crop(0,0,im.bitmap.width/2,im.bitmap.height);
+				b.crop(0,0,im.bitmap.width/2,im.bitmap.height);
+				b.mirror(true,false);
+		
+				let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
+					i.composite(a,0,0);
+					i.composite(b,im.bitmap.width/2,0);
+				});
+		
+				out.getBuffer(jimp.MIME_PNG,(e,f)=>{
+					msg.channel.createMessage("",{name:"haah.png",file:f});
+				});
+			});
+			break;
+		case 3: //woow
+			jimp.read(url)
+			.then(im=>{
+				let a = im.clone();
+				let b = im.clone();
+		
+				a.crop(0,0,im.bitmap.width,im.bitmap.height/2);
+				b.crop(0,0,im.bitmap.width,im.bitmap.height/2);
+				b.mirror(false,true);
+		
+				let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
+					i.composite(a,0,0);
+					i.composite(b,0,im.bitmap.height/2);
+				});
+		
+				out.getBuffer(jimp.MIME_PNG,(e,f)=>{
+					msg.channel.createMessage("",{name:"woow.png",file:f});
+				});
+			});
+			break;
+		case 4:
+			jimp.read(url)
+			.then(im=>{
+				let a = im.clone();
+				let b = im.clone();
+		
+				a.crop(im.bitmap.width/2,0,im.bitmap.width/2,im.bitmap.height);
+				b.crop(im.bitmap.width/2,0,im.bitmap.width/2,im.bitmap.height);
+				a.mirror(true,false);
+		
+				let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
+					i.composite(a,0,0);
+					i.composite(b,im.bitmap.width/2,0);
+				});
+		
+				out.getBuffer(jimp.MIME_PNG,(e,f)=>{
+					msg.channel.createMessage("",{name:"waaw.png",file:f});
+				});
+			});
+			break;
+	}
+	
 }
 
 let hooh = function(ctx,msg,args){
@@ -27,33 +92,12 @@ let hooh = function(ctx,msg,args){
 
 	let jimp = ctx.libs.jimp;
 	if(args && args.indexOf("http")>-1){
-		_hooh(msg,args)
+		mirror(msg,args,1)
 	}else if(msg.attachments.length>0){
-		_hooh(msg,msg.attachments[0].url)
+		mirror(msg,msg.attachments[0].url,1)
 	}else{
 		msg.channel.createMessage("Image not found. Please give URL or attachment.")
 	}
-}
-
-let _haah = function(msg,url){
-	jimp.read(url)
-	.then(im=>{
-		let a = im.clone();
-		let b = im.clone();
-
-		a.crop(0,0,im.bitmap.width/2,im.bitmap.height);
-		b.crop(0,0,im.bitmap.width/2,im.bitmap.height);
-		b.mirror(true,false);
-
-		let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
-			i.composite(a,0,0);
-			i.composite(b,im.bitmap.width/2,0);
-		});
-
-		out.getBuffer(jimp.MIME_PNG,(e,f)=>{
-			msg.channel.createMessage("",{name:"haah.png",file:f});
-		});
-	});
 }
 
 let haah = function(ctx,msg,args){
@@ -61,33 +105,12 @@ let haah = function(ctx,msg,args){
 
 	let jimp = ctx.libs.jimp;
 	if(args && args.indexOf("http")>-1){
-		_haah(msg,args)
+		mirror(msg,args,2)
 	}else if(msg.attachments.length>0){
-		_haah(msg,msg.attachments[0].url)
+		mirror(msg,msg.attachments[0].url,2)
 	}else{
 		msg.channel.createMessage("Image not found. Please give URL or attachment.")
 	}
-}
-
-let _woow = function(msg,url){
-	jimp.read(url)
-	.then(im=>{
-		let a = im.clone();
-		let b = im.clone();
-
-		a.crop(0,0,im.bitmap.width,im.bitmap.height/2);
-		b.crop(0,0,im.bitmap.width,im.bitmap.height/2);
-		b.mirror(false,true);
-
-		let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
-			i.composite(a,0,0);
-			i.composite(b,0,im.bitmap.height/2);
-		});
-
-		out.getBuffer(jimp.MIME_PNG,(e,f)=>{
-			msg.channel.createMessage("",{name:"woow.png",file:f});
-		});
-	});
 }
 
 let woow = function(ctx,msg,args){
@@ -95,33 +118,12 @@ let woow = function(ctx,msg,args){
 
 	let jimp = ctx.libs.jimp;
 	if(args && args.indexOf("http")>-1){
-		_woow(msg,args)
+		mirror(msg,args,3)
 	}else if(msg.attachments.length>0){
-		_woow(msg,msg.attachments[0].url)
+		mirror(msg,msg.attachments[0].url,3)
 	}else{
 		msg.channel.createMessage("Image not found. Please give URL or attachment.")
 	}
-}
-
-let _waaw = function(msg,url){
-	jimp.read(url)
-	.then(im=>{
-		let a = im.clone();
-		let b = im.clone();
-
-		a.crop(im.bitmap.width/2,0,im.bitmap.width/2,im.bitmap.height);
-		b.crop(im.bitmap.width/2,0,im.bitmap.width/2,im.bitmap.height);
-		a.mirror(true,false);
-
-		let out = new jimp(im.bitmap.width,im.bitmap.height,(e,i)=>{
-			i.composite(a,0,0);
-			i.composite(b,im.bitmap.width/2,0);
-		});
-
-		out.getBuffer(jimp.MIME_PNG,(e,f)=>{
-			msg.channel.createMessage("",{name:"waaw.png",file:f});
-		});
-	});
 }
 
 let waaw = function(ctx,msg,args){
@@ -129,9 +131,9 @@ let waaw = function(ctx,msg,args){
 
 	let jimp = ctx.libs.jimp;
 	if(args && args.indexOf("http")>-1){
-		_waaw(msg,args)
+		mirror(msg,args,4)
 	}else if(msg.attachments.length>0){
-		_waaw(msg,msg.attachments[0].url)
+		mirror(msg,msg.attachments[0].url,4)
 	}else{
 		msg.channel.createMessage("Image not found. Please give URL or attachment.")
 	}

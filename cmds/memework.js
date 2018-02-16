@@ -1,4 +1,4 @@
-let test = function(ctx,msg,args){
+/*let test = function(ctx,msg,args){
     msg.channel.createMessage("Hello world!");
 }
 
@@ -35,4 +35,4 @@ module.exports = [
         group:"Guild Specific",
         guild:"295341979800436736"
     }
-]
+]*/

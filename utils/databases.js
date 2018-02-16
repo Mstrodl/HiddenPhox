@@ -83,6 +83,11 @@ module.exports = function(ctx){
             defaultValue: false,
             allowNull: false,
         },
+        logchan: {
+            type: ctx.libs.sequelize.STRING,
+            defaultValue: "0",
+            allowNull: false,
+        },
         allow_snipe: {
             type: ctx.libs.sequelize.BOOLEAN,
             defaultValue: true,
