@@ -1735,9 +1735,9 @@ youtube-dl@^1.12.2:
     request "^2.83.0"
     streamify "^0.2.9"
 
-ytdl-core@^0.20.1:
-  version "0.20.1"
-  resolved "https://registry.yarnpkg.com/ytdl-core/-/ytdl-core-0.20.1.tgz#727f8a9b7907dc3eab766442081f88fabbb1b7d7"
+ytdl-core@^0.20.2:
+  version "0.20.2"
+  resolved "https://registry.yarnpkg.com/ytdl-core/-/ytdl-core-0.20.2.tgz#0c0a1cffc2d943196f0a0809f129876877b26dad"
   dependencies:
     html-entities "^1.1.3"
     m3u8stream "^0.2.1"

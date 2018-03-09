@@ -479,6 +479,21 @@ let tidy = function(ctx,msg,args){
     }
 }
 
+let esteal = async function(ctx,msg,args){
+    if(!msg.channel.permissionsOf(ctx.bot.user.id).has("manageEmojis")){
+        msg.channel.createMessage("I do not have `Manage Emojis` permission.");
+        return;
+    }
+    
+    if(!args){
+        msg.channel.getMessages(15).then(m=>{
+            let emotes = m.filter(_m=>{/<(a)?:([a-zA-Z0-9_*/-:]*):([0-9]*)>/.test(_m.content)}).map(_m=>_m.content.match(/<(a)?:([a-zA-Z0-9_*/-:]*):([0-9]*)>/));
+        });
+    }else{
+        args = ctx.utils.formatArgs(args);
+    }
+}
+
 module.exports = [
     /*{
         name:"snipe",

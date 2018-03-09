@@ -36,7 +36,7 @@ let help = async function(ctx,msg,args){
             }
         });
     }else if(args == "guild"){
-        let gcmds = ctx.cmds.filter(c=>c.guild && msg.channel.guild && c.guild == msg.channel.guild.id);
+        let gcmds = ctx.cmds.filter(c=>c.guild && msg.channel.guild && c.guild.includes(msg.channel.guild.id));
 
         if(gcmds && gcmds.length > 0){
             let out = "";

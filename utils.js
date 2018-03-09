@@ -91,15 +91,15 @@ utils.lookupUser = function(ctx,msg,str,filter){
 				for(let i=0;i<(userpool.length > 20 ? 20 : userpool.length);i++){
 					a.push("["+(i+1)+"] "+userpool[i].username+"#"+userpool[i].discriminator+(msg.channel.guild ? (userpool[i].nick ? " ("+userpool[i].nick+")" : "") : ""));
 				}
-				ctx.utils.awaitMessage(ctx,msg,"Multiple users found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",(m)=>{
+				ctx.utils.awaitMessage(ctx,msg,"Multiple users found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",async m=>{
 					let value = parseInt(m.content);
 					if(m.content.toLowerCase() == "c"){
-						ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+						(await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             m.delete().catch(()=>{return;});
 						reject("Canceled");
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
 					}else if(m.content == value){
-						ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+						(await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             m.delete().catch(()=>{return;});
 						resolve(userpool[value-1]);
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
@@ -156,15 +156,15 @@ utils.lookupGuild = function(ctx,msg,str,filter){
 				for(let i=0;i<(userpool.length > 20 ? 20 : userpool.length);i++){
 					a.push("["+(i+1)+"] "+userpool[i].name);
 				}
-				ctx.utils.awaitMessage(ctx,msg,"Multiple guilds found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",(m)=>{
+				ctx.utils.awaitMessage(ctx,msg,"Multiple guilds found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",async m=>{
 					let value = parseInt(m.content);
 					if(m.content.toLowerCase() == "c"){
-						ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+						(await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             m.delete().catch(()=>{return;});
 						reject("Canceled");
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
 					}else if(m.content == value){
-						ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+						(await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             m.delete().catch(()=>{return;});
 						resolve(userpool[value-1]);
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
@@ -213,15 +213,15 @@ utils.lookupRole = function(ctx,msg,str,filter){
                 for(let i=0;i<(userpool.length > 20 ? 20 : userpool.length);i++){
                     a.push("["+(i+1)+"] "+userpool[i].name)
                 }
-                ctx.utils.awaitMessage(ctx,msg,"Multiple roles found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",(m)=>{
+                ctx.utils.awaitMessage(ctx,msg,"Multiple roles found. Please pick from this list. \n```ini\n"+a.join("\n")+(userpool.length > 20 ? "\n; Displaying 20/"+userpool.length+" results, might want to refine your search." : "")+"\n\n[c] Cancel```",async m=>{
                     let value = parseInt(m.content);
                     if(m.content.toLowerCase() == "c"){
-                    		ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+                    		(await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             						m.delete().catch(()=>{return;});
                         reject("Canceled");
                         ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
                     }else if(m.content == value){
-                    		ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+                    		(await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             						m.delete().catch(()=>{return;});
                         resolve(userpool[value-1]);
                         ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);

@@ -75,38 +75,34 @@ let gimg = function(ctx,msg,args){
     }
 }
 
-let me_irl = function(ctx,msg,args){
-    ctx.libs.request.get("http://www.reddit.com/r/me_irl/top.json?sort=default&count=50",function(e,r,b){
-        if(!e && r.statusCode == 200){
-            let data = JSON.parse(b).data.children;
-            let post = data[Math.floor(Math.random()*data.length)].data;
-            post.url = post.url.replace(/http(s)?:\/\/(m\.)?imgur\.com/g,"https://i.imgur.com");
-            post.url = post.url.replace(new RegExp('&amp;','g'),"&");
-            post.url = post.url.replace("/gallery","");
-            post.url = post.url.replace("?r","");
+let me_irl = async function(ctx,msg,args){
+    let req = await ctx.libs.superagent.get("http://www.reddit.com/r/me_irl/top.json?sort=default&count=50");
 
-            if(post.url.indexOf("imgur") > -1 && post.url.substring(post.url.length-4,post.url.length-3) != "."){
-                post.url+=".png";
-            }
+    let data = req.body.data.children;
+    let post = data[Math.floor(Math.random()*data.length)].data;
+    post.url = post.url.replace(/http(s)?:\/\/(m\.)?imgur\.com/g,"https://i.imgur.com");
+    post.url = post.url.replace(new RegExp('&amp;','g'),"&");
+    post.url = post.url.replace("/gallery","");
+    post.url = post.url.replace("?r","");
 
-            msg.channel.createMessage({embed:{
-                title:post.title,
-                url:"https://reddit.com"+post.permalink,
-                author:{
-                    name:"u/"+post.author
-                },
-                description:"[Image/Video]("+post.url+")",
-                image:{
-                    url:encodeURI(post.url)
-                },
-                footer:{
-                    text:"Powered by r/me_irl"
-                }
-            }});
-        }else{
-            msg.channel.createMessage("An error occured, try again later.\n\n```\n"+e+"```")
+    if(post.url.indexOf("imgur") > -1 && post.url.substring(post.url.length-4,post.url.length-3) != "."){
+        post.url+=".png";
+    }
+
+    msg.channel.createMessage({embed:{
+        title:post.title,
+        url:"https://reddit.com"+post.permalink,
+        author:{
+            name:"u/"+post.author
+        },
+        description:"[Image/Video]("+post.url+")",
+        image:{
+            url:encodeURI(post.url)
+        },
+        footer:{
+            text:"Powered by r/me_irl"
         }
-    });
+    }});
 }
 
 

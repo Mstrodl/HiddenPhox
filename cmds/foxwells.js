@@ -11,6 +11,6 @@ module.exports = [
 		desc:"See the webcam behind Bri's monitor.",
 		func:webcam,
 		group:"Guild Specific",
-		guild:"216292020371718146"
+		guild:["216292020371718146","295341979800436736"]
 	}
 ]

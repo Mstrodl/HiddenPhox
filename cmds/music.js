@@ -133,7 +133,7 @@ let doMusicThingsOk = async function(id,url,type,msg,ctx){
 }
 
 let doSearchThingsOk = async function(id,str,msg,ctx){
-    let req = await ctx.libs.superagent.get(`https://www.googleapis.com/youtube/v3/search?key=${ctx.apikeys.google}&maxResults=5&part=snippet&type=video&q=${encodeURIComponent(args)}`)
+    let req = await ctx.libs.superagent.get(`https://www.googleapis.com/youtube/v3/search?key=${ctx.apikeys.google}&maxResults=5&part=snippet&type=video&q=${encodeURIComponent(str)}`)
     let data = req.body.items;
 
     let m = "Please type a number to choose your selection\n```ini\n";
@@ -144,15 +144,15 @@ let doSearchThingsOk = async function(id,str,msg,ctx){
 
     m = m + "\n[c] Cancel\n```";
 
-    ctx.utils.awaitMessage(ctx,msg,m,_msg=>{
+    ctx.utils.awaitMessage(ctx,msg,m,async _msg=>{
         let value = parseInt(_msg.content);
         if(_msg.content == "c"){
-            ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+            (await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             _msg.delete().catch(()=>{return;});
             msg.channel.createMessage("Canceled.");
             ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
         }else if(_msg.content == value){
-            ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg.delete();
+            (await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             _msg.delete().catch(()=>{return;});
             let vid = data[value-1];
             ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);

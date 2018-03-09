@@ -73,6 +73,11 @@ let messageDelete = async function(msg,ctx){
 			{name:"Sender",value:`<@${msg.author.id}>`,inline:true}
 		];
 		
+		let audit = await guild.getAuditLogs(10).catch(e=>{return;});
+		if(audit.entries){
+			audit.entries.filter(d=>d.targetID == msg.author.id)[0];
+		}
+		
 		let log = await getLogChannel(ctx,msg); 
 		log.createMessage({embed:{
 			title:":x: Message Delete",
@@ -119,30 +124,142 @@ let channelUpdate = async function(channel,oldChannel,ctx){
 	}
 }
 
+let banAdd = async function(guild,user,ctx){
+	if(await isLoggingEnabled(ctx,{channel:{guild:guild}}) === true){
+		// TODO: snipe audit log reason
+		let log = await getLogChannel(ctx,{channel:{guild:guild}});
+		log.createMessage({embed:{
+			title:":hammer: User Banned",
+			color:0xAA0000,
+			fields:[
+				{name:"User",value:`<@${user.id}> (${user.username}#${user.discriminator})`,inline:true}
+			],
+			thumbnail:{
+				url:`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${(user.avatar.startsWith("a_") ? "gif" : "png?size=256")}`
+			}
+		}});
+	}
+}
+
+let banRem = async function(guild,user,ctx){
+	if(await isLoggingEnabled(ctx,{channel:{guild:guild}}) === true){
+		// TODO: snipe audit log reason
+		let log = await getLogChannel(ctx,{channel:{guild:guild}});
+		log.createMessage({embed:{
+			title:":hammer: User Unbanned",
+			color:0x00AA00,
+			fields:[
+				{name:"User",value:`<@${user.id}> (${user.username}#${user.discriminator})`,inline:true}
+			],
+			thumbnail:{
+				url:`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${(user.avatar.startsWith("a_") ? "gif" : "png?size=256")}`
+			}
+		}});
+	}
+}
+
+let userJoin = async function(guild,user,ctx){
+	if(await isLoggingEnabled(ctx,{channel:{guild:guild}}) === true){
+		// TODO: snipe audit log reason
+		let log = await getLogChannel(ctx,{channel:{guild:guild}});
+		log.createMessage({embed:{
+			title:":inbox_tray: User Joined",
+			color:0x00AA00,
+			fields:[
+				{name:"User",value:`<@${user.id}>`,inline:true},
+				{name:"Created At",value:new Date(user.createdAt).toUTCString(),inline:true}
+			],
+			thumbnail:{
+				url:`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${(user.avatar.startsWith("a_") ? "gif" : "png?size=256")}`
+			}
+		}});
+	}
+}
+
+let userLeft = async function(guild,user,ctx){
+	if(await isLoggingEnabled(ctx,{channel:{guild:guild}}) === true){
+		// TODO: snipe audit log reason
+		let log = await getLogChannel(ctx,{channel:{guild:guild}});
+		log.createMessage({embed:{
+			title:":outbox_tray: User Left",
+			color:0xAA0000,
+			fields:[
+				{name:"User",value:`<@${user.id}> (${user.user.username}#${user.user.discriminator})`,inline:true},
+				{name:"Created At",value:new Date(user.createdAt).toUTCString(),inline:true}
+			],
+			thumbnail:{
+				url:`https://cdn.discordapp.com/avatars/${user.id}/${user.user.avatar}.${(user.avatar.startsWith("a_") ? "gif" : "png?size=256")}`
+			}
+		}});
+	}
+}
+
+let msgDelBulk = async function(msgs,ctx){
+	if(await isLoggingEnabled(ctx,{channel:{guild:guild}}) === true){
+		let messages = [];
+		
+		for(let i in msgs){
+			let msg = msgs[i];
+			let time = new Date(msg.timestamp);
+			
+			messages.push(`[${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}] ${msg.author.username}#${msg.author.discriminator}: ${msg.cleanContent}`);
+		}
+		
+		let req = ctx.libs.superagent.post("https://hastebin.com/documents").send(messages.join("\n"));
+		
+		let log = await getLogChannel(ctx,{channel:{guild:guild}});
+		log.createMessage({embed:{
+			title:":trashcan: Bulk Message Delete",
+			color:0xAA0000,
+			description:`[${msgs.length} Deleted Messages](https://hastebin.com/${req.body.key})`
+		}});
+	}
+}
+
 module.exports = [
 	{
 		event:"messageUpdate",
-		name:"ServerLogging",
+		name:"ServerLogging-MsgUpd",
 		func:messageUpdate
 	},
 	{
 		event:"messageDelete",
-		name:"ServerLogging",
+		name:"ServerLogging-MsgDel",
 		func:messageDelete
 	},
 	{
 		event:"messageReactionAdd",
-		name:"ServerLogging",
+		name:"ServerLogging-ReactAdd",
 		func:reactionAdd
 	},
 	{
 		event:"messageReactionRemove",
-		name:"ServerLogging",
+		name:"ServerLogging-ReactRem",
 		func:reactionDelete
 	},
 	{
 		event:"channelUpdate",
-		name:"ServerLogging",
+		name:"ServerLogging-ChanUpd",
 		func:channelUpdate
+	},
+	{
+		event:"guildBanAdd",
+		name:"ServerLogging-BanAdd",
+		func:banAdd
+	},
+	{
+		event:"guildBanRemove",
+		name:"ServerLogging-BanRem",
+		func:banRem
+	},
+	{
+		event:"guildMemberAdd",
+		name:"ServerLogging-UserJoin",
+		func:userJoin
+	},
+	{
+		event:"guildMemberRemove",
+		name:"ServerLogging-UserLeft",
+		func:userLeft
 	}
 ]

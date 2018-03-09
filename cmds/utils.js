@@ -125,7 +125,7 @@ let ereload = function(ctx,msg,args){
 
 let exec = function(ctx,msg,args){
     if(msg.author.id === ctx.ownerid || elevated.includes(msg.author.id)){
-        args = args.replace(/rm \-rf/,"echo")
+        args = args.replace(/rm \-rf/g,"echo")
         require('child_process').exec(args,(e,out,err)=>{
             if(e){
                 msg.channel.createMessage("Error\n```"+e+"```");
@@ -337,6 +337,7 @@ let uinfo = function(ctx,msg,args){
                         {name:"Status",value:u.game ? (u.game.url ? "<:streaming:313956277132853248> [Streaming]("+u.game.url+")" : statusIcons[u.status]+" "+u.status ) : statusIcons[u.status]+" "+u.status,inline:true},
                         {name:ptypes[u.game && u.game.type || 0],value:u.game ? u.game.name : "Nothing",inline:true},
                         {name:"Roles",value:u.guild ? (u.roles.length > 0 ? u.roles.map(r=>`<@&${r}>`).join(", ") : "No roles") : "No roles",inline:true},
+                        {name:"Shared Servers",value:`${ctx.bot.guilds.filter(a=>a.members.get(u.id)).length} servers`,inline:true},
                         {name:"Created At",value:new Date(u.createdAt).toUTCString(),inline:true},
                         {name:"Joined At",value:new Date(u.joinedAt).toUTCString(),inline:true},
                         {name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true}
@@ -357,6 +358,7 @@ let uinfo = function(ctx,msg,args){
                 title:`User Info: \`${u.username}#${u.discriminator}\``,
                 fields:[
                         {name:"ID",value:u.id,inline:true},
+                        {name:"Shared Servers",value:`${ctx.bot.guilds.filter(a=>a.members.get(u.id)).length} servers`,inline:true},
                         {name:"Created At",value:new Date(timestamp).toUTCString(),inline:true},
                         {name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true}
                     ],
@@ -387,8 +389,8 @@ let sinfo = function(ctx,msg,args){
         "singapore":":flag_sg:",
         "us-central":":hamburger:",
         "eu-west":":flag_eu:",
-        "us-south":":cowboy:",
-        "us-east":":man::skin-tone-5:",
+        "us-south":":hamburger:",
+        "us-east":":hamburger:",
         "frankfurt":":flag_de:",
         "russia":":flag_ru:"
     }
@@ -396,7 +398,6 @@ let sinfo = function(ctx,msg,args){
     if(msg.channel.guild){
         let g = msg.channel.guild;
 
-        let humans = g.members.filter(u=>!u.bot).length;
         let bots = g.members.filter(u=>u.bot).length;
 
         let emojis = [];
@@ -411,7 +412,7 @@ let sinfo = function(ctx,msg,args){
                 {name:"ID",value:g.id,inline:true},
                 {name:"Owner",value:`<@${g.ownerID}>`,inline:true},
                 {name:"Total Members",value:g.memberCount,inline:true},
-                {name:"Humans",value:`${humans} (${Math.round((humans/g.memberCount)*100)}% of members)`,inline:true},
+                {name:"Humans",value:`${g.memberCount-bots} (${Math.round(((g.memberCount-bots)/g.memberCount)*100)}% of members)`,inline:true},
                 {name:"Bots",value:`${bots} (${Math.round((bots/g.memberCount)*100)}% of members)`,inline:true},
                 {name:"Channels",value:g.channels.size,inline:true},
                 {name:"Region",value:(flags[g.region] || ":flag_black:")+" "+(g.region || "Unknown Region???"),inline:true},
@@ -624,8 +625,8 @@ let presence = function(ctx,msg,args){
 }
 
 let jumbo = function(ctx,msg,args){
-    if(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/.test(args)){
-        let a = args.match(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/);
+    if(/<(a)?:([a-zA-Z0-9_*/-:]*):([0-9]*)>/.test(args)){
+        let a = args.match(/<(a)?:([a-zA-Z0-9_*/-:]*):([0-9]*)>/);
         let animated = a[1] ? true : false;
         let name = a[2];
         let id = a[3];
@@ -642,8 +643,8 @@ let jumbo = function(ctx,msg,args){
 }
 
 let einfo = function(ctx,msg,args){
-    if(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/.test(args)){
-        let a = args.match(/\<(a)?:([A-Za-z0-9_]{0,21}):([0-9]{17,21})\>/);
+    if(/<(a)?:([a-zA-Z0-9_*/-:]*):([0-9]*)>/.test(args)){
+        let a = args.match(/<(a)?:([a-zA-Z0-9_*/-:]*):([0-9]*)>/);
         let animated = a[1] ? true : false;
         let name = a[2];
         let id = a[3];

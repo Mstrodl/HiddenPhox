@@ -146,7 +146,7 @@ client.on("messageCreate",msg=>{
 
 		ctx.cmds.forEach(async c=>{
 			if(cmd == prefix+c.name){
-				if(c.guild && msg.channel.guild && c.guild != msg.channel.guild.id) return;
+				if(c.guild && msg.channel.guild && !c.guild.includes(msg.channel.guild.id)) return;
 				try{
 					c.func(ctx,msg,args.join(" "));
 					ctx.utils.logInfo(ctx,`'${msg.author.username}' (${msg.author.id}) ran command '${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' in '#${msg.channel.name ? msg.channel.name : msg.channel.id}' on '${msg.channel.guild ? msg.channel.guild.name : "DMs"}'${msg.channel.guild ? " ("+msg.channel.guild.id+")" : ""}`);
@@ -166,7 +166,7 @@ client.on("messageCreate",msg=>{
 			}
 
 			if(c.aliases && (cmd == prefix+c.name || cmd == prefix+c.aliases.find(a=>a==cmd.replace(prefix,""))) && !hasRan){
-				if(c.guild && msg.channel.guild && c.guild != msg.channel.guild.id) return;
+				if(c.guild && msg.channel.guild && !c.guild.includes(msg.channel.guild.id)) return;
 				try{
 					c.func(ctx,msg,args.join(" "));
 					ctx.utils.logInfo(ctx,`'${msg.author.username}' (${msg.author.id}) ran guild command '${cmd2} ${cmd2 == prefix+"eval" ? "<eval redacted>" : args2.join(" ").split("").splice(0,50).join("")}${args2.join(" ").length > 50 ? "..." : ""}' in '#${msg.channel.name ? msg.channel.name : msg.channel.id}' on '${msg.channel.guild ? msg.channel.guild.name : "DMs"}'${msg.channel.guild ? " ("+msg.channel.guild.id+")" : ""}`);

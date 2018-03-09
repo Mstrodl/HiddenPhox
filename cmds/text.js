@@ -175,6 +175,63 @@ let bubblesay = function(ctx,msg,args){
     }
 }
 
+let logosay = function(ctx,msg,args){
+    if(!args){
+        msg.channel.createMessage(`Please use with some text.`);
+    }else{
+        let emotes = {
+            "0":"0",
+            "1":"1",
+            "2":"2",
+            "3":"3",
+            "4":"4",
+            "5":"5",
+            "6":"6",
+            "7":"7",
+            "8":"8",
+            "9":"9",
+            "a":"<:LogoA:414655543458922506>",
+            "b":"<:LogoB:414655554158329856>",
+            "c":"<:LogoC:414655566636646400>",
+            "d":"<:LogoD:414655751181565974>",
+            "e":"<:LogoE:414655783116996608>",
+            "f":"<:LogoF:414655803157381122>",
+            "g":"<:LogoG:414655817493512200>",
+            "h":"<:LogoH:414655829732753420>",
+            "i":"<:LogoI:414656712478294026>",
+            "j":"<:LogoJ:414660430577795072>",
+            "k":"<:LogoK:414660451822075904>",
+            "l":"<:LogoL:414660470834724876>",
+            "m":"<:LogoM:414660488970895360>",
+            "n":"<:LogoN:414660515298541589>",
+            "o":"<:LogoO:414660533531181057>",
+            "p":"<:LogoP:414676183926571009>",
+            "q":"<:LogoQ:414666225600299018>",
+            "r":"<:LogoR:414666249138601994>",
+            "s":"<:LogoS:414666264930418698>",
+            "t":"<:LogoT:414666283687346187>",
+            "u":"<:LogoU:414666299407335424>",
+            "v":"<:LogoV:414666317627523073>",
+            "w":"<:LogoW:414666346144595978>",
+            "x":"<:LogoX:414666361373982722>",
+            "y":"<:LogoY:414666374179454976>",
+            "z":"<:LogoZ:414666386304925706>"
+        }
+
+        let inp = ctx.utils.safeString(args).split("");
+        let out = ""
+        for (let x in inp){
+            if(inp[x].toLowerCase() == " " || inp[x].toLowerCase() == ":"){
+                out += "<:blankboi:393555375389016065>";
+            }else{
+                out += emotes[inp[x].toLowerCase()] || inp[x].toLowerCase();
+            }
+        }
+
+        msg.channel.createMessage(out);
+    }
+}
+
 module.exports = [
     {
         name:"dancesay",
@@ -203,5 +260,12 @@ module.exports = [
         func:bubblesay,
         group:"text",
         aliases:["bsay"]
+    },
+    {
+        name:"logosay",
+        desc:"Say things in logos",
+        func:logosay,
+        group:"text",
+        aliases:["lsay","ls"]
     }
 ]
