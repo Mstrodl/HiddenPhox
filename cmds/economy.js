@@ -480,38 +480,61 @@ let steal = async function(ctx,msg,args){
 }
 
 let sstate = async function(ctx,msg,args){
-    let data = await ctx.db.models.econ.findOne({where:{id:msg.author.id}});
-    let now = new Date().getTime();
+    let accounts = await ctx.db.models.econ.findAll();
 
-    let out = [
-        `__Stealing state for **${msg.author.username}#${msg.author.discriminator}**__`,
-        `**Points:** ${data.points}`,
-        `\n**Cooldowns:**`
-    ];
-
-    if(data.cd_jail > now){
-        out.push(`<:RedTick:349381062054510604> **In Jail:** ${ctx.utils.remainingTime(data.cd_jail-now)} remaining.`);
-    }else{
-        out.push(`<:GreenTick:349381062176145408> **Not in jail.**`);
+    let filter = function(m){
+        for(let i=0;i<accounts.length;i++){
+            let acc = accounts[i];
+            if(m.id == acc.id) return m;
+        }
     }
 
-    if(data.cd_grace > now){
-        out.push(`<:RedTick:349381062054510604> **Grace Period:** ${ctx.utils.remainingTime(data.cd_grace-now)} remaining.`);
-    }else{
-        out.push(`<:GreenTick:349381062176145408> **Not in grace period.**`);
-    }
+    ctx.utils.lookupUser(ctx,msg,args || msg.author.id,filter)
+    .then(async u=>{
+        let data = await ctx.db.models.econ.findOne({where:{id:u.id}});
+        let now = new Date().getTime();
 
-    if(data.cd_heist > now){
-        out.push(`<:RedTick:349381062054510604> **Heist Cooldown:** ${ctx.utils.remainingTime(data.cd_heist-now)} remaining.`);
-    }else{
-        out.push(`<:GreenTick:349381062176145408> **Can heist.**`);
-    }
+        if(!data){
+            msg.channel.createMessage("User doesn't have an account.");
+            return;
+        }
 
-    if(data.cd_regen > now){
-        out.push(`<:RedTick:349381062054510604> **Point Regen:** ${ctx.utils.remainingTime(data.cd_regen-now)} remaining.`);
-    }
+        let out = [
+            `__Stealing state for **${u.username}#${u.discriminator}**__`,
+            `**Points:** ${data.points}`,
+            `\n**Cooldowns:**`
+        ];
 
-    msg.channel.createMessage(out.join("\n"));
+        if(data.cd_jail > now){
+            out.push(`<:RedTick:349381062054510604> **In Jail:** ${ctx.utils.remainingTime(data.cd_jail-now)} remaining.`);
+        }else{
+            out.push(`<:GreenTick:349381062176145408> **Not in jail.**`);
+        }
+
+        if(data.cd_grace > now){
+            out.push(`<:RedTick:349381062054510604> **Grace Period:** ${ctx.utils.remainingTime(data.cd_grace-now)} remaining.`);
+        }else{
+            out.push(`<:GreenTick:349381062176145408> **Not in grace period.**`);
+        }
+
+        if(data.cd_heist > now){
+            out.push(`<:RedTick:349381062054510604> **Heist Cooldown:** ${ctx.utils.remainingTime(data.cd_heist-now)} remaining.`);
+        }else{
+            out.push(`<:GreenTick:349381062176145408> **Can heist.**`);
+        }
+
+        if(data.cd_regen > now){
+            out.push(`<:RedTick:349381062054510604> **Point Regen:** ${ctx.utils.remainingTime(data.cd_regen-now)} remaining.`);
+        }
+
+        msg.channel.createMessage(out.join("\n"));
+    }).catch(m=>{
+        if(m == "No results." || m == "Canceled"){
+            msg.channel.createMessage(m);
+        }else{
+            ctx.utils.logWarn(ctx,m.message);
+        }
+    });
 }
 
 /* End Steal Code Stuffs */
