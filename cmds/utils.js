@@ -35,7 +35,7 @@ let _eval = async function(ctx,msg,args){
                 ctx.libs.superagent.post("https://hastebin.com/documents")
                 .send(output)
                 .then(res=>{
-                    let key = JSON.parse(res.body).key;
+                    let key = res.body.key;
                     msg.channel.createMessage(`\u2705 Output too long to send in a message: https://hastebin.com/${key}.js`);
                 })
                 .catch(e=>{
@@ -46,7 +46,7 @@ let _eval = async function(ctx,msg,args){
             }
         }
     }else{
-        msg.channel.createMessage("https://i.imgur.com/yU94Rhp.png");
+        msg.channel.createMessage("No\n\nSent from my iPhone.");
     }
 }
 
@@ -60,7 +60,7 @@ let restart = function(ctx,msg,args){
 }
 
 let reload = function (ctx, msg, args) {
-    if (msg.author.id === "150745989836308480") {
+    if (msg.author.id === ctx.ownerid) {
         if (ctx.libs.fs.existsSync(__dirname + "/" + args + ".js")) {
             try {
                 let c = ctx.libs.reload(__dirname + "/" + args + ".js");
@@ -75,7 +75,7 @@ let reload = function (ctx, msg, args) {
                         }
                     }
                 }
-                msg.channel.createMessage(":ok_hand:");
+                msg.addReaction("\uD83D\uDC4C");
             } catch (e) {
                 msg.channel.createMessage(`:warning: Error reloading: \`${e.message}\``);
             }
@@ -88,7 +88,7 @@ let reload = function (ctx, msg, args) {
 }
 
 let ereload = function(ctx,msg,args){
-    if (msg.author.id === "150745989836308480") {
+    if (msg.author.id === ctx.ownerid) {
         if (ctx.libs.fs.existsSync(__dirname + "/../events/" + args + ".js")) {
             try {
                 let e = ctx.libs.reload(__dirname + "/../events/" + args + ".js");
@@ -111,7 +111,7 @@ let ereload = function(ctx,msg,args){
                         }
                     }
                 }
-                msg.channel.createMessage(":ok_hand:");
+                msg.addReaction("\uD83D\uDC4C");
             } catch (e) {
                 msg.channel.createMessage(`:warning: Error reloading: \`${e.message}\``);
             }
@@ -130,7 +130,20 @@ let exec = function(ctx,msg,args){
             if(e){
                 msg.channel.createMessage("Error\n```"+e+"```");
             }else{
-                msg.channel.createMessage("```\n"+out+"\n```");
+                if ((out.toString()).length > 1980){
+                    let output = out.toString();
+                    ctx.libs.superagent.post("https://hastebin.com/documents")
+                    .send(output)
+                    .then(res=>{
+                        let key = res.body.key;
+                        msg.channel.createMessage(`\u2705 Output too long to send in a message: https://hastebin.com/${key}.js`);
+                    })
+                    .catch(e=>{
+                        msg.channel.createMessage(`Could not upload output to Hastebin.`);
+                    });
+                }else{
+                    msg.channel.createMessage("\u2705 Output:\n```bash\n"+out+"\n```");
+                }
             }
         });
     }else{

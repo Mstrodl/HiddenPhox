@@ -76,7 +76,7 @@ let dehoist = function(ctx,msg,args){
             }
 			u.edit({nick:`\uD82F\uDCA2${u.nick && u.nick.slice(0,30) || u.username.slice(0,30)}`})
 			.then(()=>{
-				msg.channel.createMessage(":ok_hand:");
+				msg.addReaction("\uD83D\uDC4C");
 			})
 			.catch(r=>{
 				msg.channel.createMessage(`Could not set nick:\n\`\`\`\n${r}\`\`\``);
@@ -170,7 +170,7 @@ let roleme = async function(ctx,msg,args){
 
             if(rme.includes(r.id)){
                 msg.member.addRole(r.id,"[HiddenPhox] Added via roleme.");
-                msg.channel.createMessage(":ok_hand:");
+                msg.addReaction("\uD83D\uDC4C");
             }else{
                 msg.channel.createMessage("Role not elegible for roleme.");
             }
@@ -194,7 +194,7 @@ let roleme = async function(ctx,msg,args){
 
             if(rme.includes(r.id)){
                 msg.member.removeRole(r.id,"[HiddenPhox] Removed via roleme.");
-                msg.channel.createMessage(":ok_hand:");
+                msg.addReaction("\uD83D\uDC4C");
             }else{
                 msg.channel.createMessage("Role not elegible for roleme. If this role was previously added to roleme, contact someone that can manage roles.");
             }
@@ -331,10 +331,12 @@ let kick = function(ctx,msg,args){
                 m=>{
                     if(m.content.toLowerCase() == "yes"){
                         ctx.bot.kickGuildMember(msg.channel.guild.id,u.id,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
-                        msg.channel.createMessage(":ok_hand:");
+                        msg.addReaction("\uD83D\uDC4C");
+                        m.delete().catch(()=>{});
                         ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
                     }else{
                         msg.channel.createMessage("Kick aborted.");
+                        m.delete().catch(()=>{});
                         ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
                     }
                 });
@@ -374,10 +376,12 @@ let ban = function(ctx,msg,args){
                 m=>{
                     if(m.content.toLowerCase() == "yes"){
                         ctx.bot.banGuildMember(msg.channel.guild.id,u.id,0,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
-                        msg.channel.createMessage(":ok_hand:");
+                        msg.addReaction("\uD83D\uDC4C");
+                        m.delete().catch(()=>{});
                         ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
                     }else{
                         msg.channel.createMessage("Ban aborted.");
+                        m.delete().catch(()=>{});
                         ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
                     }
                 });
@@ -414,7 +418,7 @@ let unban = function(ctx,msg,args){
         .then(u=>{
             try{
                 ctx.bot.unbanGuildMember(msg.channel.guild.id,u.id,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
-                msg.channel.createMessage(":ok_hand:");
+                msg.addReaction("\uD83D\uDC4C");
             }catch(e){
                 msg.channel.createMessage(`Could not unban:\n\`\`\`\n${e.message}\n\`\`\``);
                 ctx.utils.logWarn(ctx,"[unban] "+e.message);
@@ -431,6 +435,15 @@ let tidy = function(ctx,msg,args){
     args = ctx.utils.formatArgs(args);
     let cmd = args[0];
     args = args.splice(1);
+    
+    if(!msg.channel.permissionsOf(msg.author.id).has("manageMessages")){
+        msg.channel.createMessage("You do not have `Manage Messages` permission.");
+        return;
+    }
+    if(!msg.channel.permissionsOf(ctx.bot.user.id).has("manageMessages")){
+        msg.channel.createMessage("I do not have `Manage Messages` permission.");
+        return;
+    }
 
     if(cmd == "all"){
         let amt = parseInt(args.join(" ")) > 0 ? parseInt(args.join(" ")) : 10;

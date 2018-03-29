@@ -606,6 +606,21 @@ let fcstats = async function(ctx,msg,args){
     }});
 }
 
+let taxbank = async function(ctx,msg,args){
+    if(!msg.channel.guild){
+        msg.channel.createMessage("Command can only be used in guilds.");
+        return;
+    }
+    
+    let data = await ctx.db.models.taxbanks.findOne({where:{id:msg.channel.guild.id}});
+    
+    if(!data){
+        msg.channel.createMessage("This guild does not have a taxbank.")   
+    }else{
+        msg.channel.createMessage(`**${msg.channel.guild.name}**'s taxbank has **${data.currency}FC**.`);
+    }
+}
+
 module.exports = [
     {
         name:"account",
@@ -680,5 +695,12 @@ module.exports = [
         func:fcstats,
         group:"economy",
         aliases:["estats","econstats"]
+    },
+    {
+        name:"taxbank",
+        desc:"Check how much the guild's taxbank has.",
+        func:taxbank,
+        group:"economy",
+        aliases:["tb","bank"]
     }
 ];

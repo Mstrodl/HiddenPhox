@@ -45,14 +45,14 @@ let doMusicThingsOk = async function(id,url,type,msg,ctx){
                     }
                 });
             }else{
-                conn.play(ytdl(url,""),{inlineVolume:true});
+                conn.play(ytdl(url,{quality:"highestaudio"}),{inlineVolume:true});
                 ytdl.getInfo(url, {}, function(err, info) {
                     if(info == null || info.title == null){
                         msg.channel.createMessage(`:musical_note: Now playing: \`${url}\``);
                         ctx.vc.get(id).np = url;
                     }else{
                         msg.channel.createMessage(`:musical_note: Now playing: \`${info.title}\``);
-                        ctx.vc.get(id).np = info.title;
+                        ctx.vc.get(id).np = info.title + ` (\`${url}\`)`;
                     }
                 });
             }
@@ -60,21 +60,21 @@ let doMusicThingsOk = async function(id,url,type,msg,ctx){
             ctx.bot.joinVoiceChannel(id).then(conn=>{
                 ctx.vc.set(id,conn);
                 ctx.vc.get(id).iwastoldtoleave = false;
-                conn.play(ytdl(url,""),{inlineVolume:true});
+                conn.play(ytdl(url,{quality:"highestaudio"}),{inlineVolume:true});
                 ytdl.getInfo(url, {}, function(err, info) {
                     if(info == null || info.title == null){
                         msg.channel.createMessage(`:musical_note: Now playing: \`${url}\``);
                         if(ctx.vc.get(id)) ctx.vc.get(id).np = url;
                     }else{
                         msg.channel.createMessage(`:musical_note: Now playing: \`${info.title}\``);
-                        ctx.vc.get(id).np = info.title;
+                        ctx.vc.get(id).np = info.title + ` (${url})`;
                     }
                 });
                 createEndFunction(id,url,type,msg,ctx);
             });
         }
     }else if(type == "sc"){
-        if(url.startsWith("sc:")){ url = "https://soundcloud.com/"+url.split("sc:").splice(1,999); }
+        if(url.startsWith("sc:")){ url = "https://soundcloud.com/"+url.split("sc:").splice(1); }
         if(ctx.vc.get(id)){
             let conn = ctx.vc.get(id);
             if(conn.playing){
