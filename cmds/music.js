@@ -2,6 +2,7 @@ var ytdl = require("ytdl-core");
 var scdl = require("youtube-dl");
 
 var ytregex = new RegExp("(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$");
+var plregex = new RegExp("(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/playlist.+$");
 var mp3regex = new RegExp("(https?\:\/\/)?.*\..*\/.+\.(mp3|xm|mod|s3m|it|ogg)$");
 var scregex = new RegExp("(https?\:\/\/)?(www\.|m\.)?soundcloud\.com\/.+\/.+$");
 var scregex2 = new RegExp("sc\:.+\/.+$");
@@ -20,15 +21,25 @@ let createEndFunction = function(id,url,type,msg,ctx){
             let conn = ctx.vc.get(id);
             conn.disconnect();
             if(ctx.vc.get(id).iwastoldtoleave === false){msg.channel.createMessage(":musical_note: Queue is empty, leaving voice channel.")}
-            conn.removeListener("error",console.error);
-            conn.removeListener("warn",console.warn);
+            conn.removeListener("error",m=>ctx.utils.logWarn(ctx,m));
+            conn.removeListener("warn",m=>ctx.utils.logWarn(ctx,m));
+            conn.removeListener("end",ctx.vc.get(id).evntEnd)
             ctx.vc.delete(id);
         }
     }
 
     ctx.vc.get(id).on("end",ctx.vc.get(id).evntEnd);
-    ctx.vc.get(id).on("error",console.error);
-    ctx.vc.get(id).on("warn",console.warn);
+    ctx.vc.get(id).on("error",m=>ctx.utils.logWarn(ctx,m));
+    ctx.vc.get(id).on("warn",m=>ctx.utils.logWarn(ctx,m));
+}
+
+let doPlaylistThingsOk = async function(ctx,msg,url){
+    let pl = scdl(url);
+    pl.on("info",(info)=>{
+        doMusicThingsOk(msg.member.voiceState.channelID, "https://youtu.be/"+info.id, "yt", msg, ctx);
+    });
+
+    pl.on("next",async u=>{ctx.utils.logInfo(ctx,"next in playlist"); await doPlaylistThingsOk(ctx,msg,u)});
 }
 
 let doMusicThingsOk = async function(id,url,type,msg,ctx){
@@ -171,14 +182,30 @@ let func = function(ctx,msg,args){
 
         if(cmd == "play" || cmd == "p"){
             if(msg.member.voiceState && msg.member.voiceState.channelID){
-                if(ytregex.test(cargs)) {
+                let processed = false;
+
+                if(plregex.test(cargs)) {
+                    doPlaylistThingsOk(ctx,msg,cargs);
+                    processed = true;
+                }else if(ytregex.test(cargs) && processed == false) {
                     doMusicThingsOk(msg.member.voiceState.channelID,cargs,"yt",msg,ctx);
+                    processed = true;
                 }else if(scregex.test(cargs) || scregex2.test(cargs)) {
                     doMusicThingsOk(msg.member.voiceState.channelID,cargs,"sc",msg,ctx);
                 }else if(mp3regex.test(cargs)) {
                     doMusicThingsOk(msg.member.voiceState.channelID,cargs,"mp3",msg,ctx);
                 }else{
                     doSearchThingsOk(msg.member.voiceState.channelID,cargs,msg,ctx);
+                }
+            }else{
+                msg.channel.createMessage("You are not in a voice channel.");
+            }
+        }else if(cmd == "playlist" || cmd == "pl"){
+            if(msg.member.voiceState && msg.member.voiceState.channelID){
+                if(plregex.test(cargs)) {
+                    doPlaylistThingsOk(ctx,msg,cargs);
+                }else{
+                    msg.channel.createMessage("Not a playlist");
                 }
             }else{
                 msg.channel.createMessage("You are not in a voice channel.");
@@ -190,6 +217,7 @@ let func = function(ctx,msg,args){
                     let conn = ctx.vc.get(msg.member.voiceState.channelID);
                     conn.iwastoldtoleave = true;
                     conn.stopPlaying();
+                    ctx.bot.leaveVoiceChannel(msg.member.voiceState.channelID);
                 }else{
                     msg.channel.createMessage("No voice connection found, brute forcing disconnect.");
                     ctx.bot.leaveVoiceChannel(msg.member.voiceState.channelID);
@@ -201,8 +229,10 @@ let func = function(ctx,msg,args){
             if(msg.member.voiceState && msg.member.voiceState.channelID && ctx.vc.get(msg.member.voiceState.channelID)){
                 ctx.vc.get(msg.member.voiceState.channelID).queue = ctx.vc.get(msg.member.voiceState.channelID).queue ? ctx.vc.get(msg.member.voiceState.channelID).queue : [];
                 if(cargs){
-                    if(ytregex.test(cargs)) {
-                    doMusicThingsOk(msg.member.voiceState.channelID,cargs,"yt",msg,ctx);
+                    if(plregex.test(cargs)) {
+                        doPlaylistThingsOk(ctx,msg,cargs);
+                    }else if(ytregex.test(cargs)) {
+                        doMusicThingsOk(msg.member.voiceState.channelID,cargs,"yt",msg,ctx);
                     }else if(scregex.test(cargs) || scregex2.test(cargs)) {
                         doMusicThingsOk(msg.member.voiceState.channelID,cargs,"sc",msg,ctx);
                     }else if(mp3regex.test(cargs)) {

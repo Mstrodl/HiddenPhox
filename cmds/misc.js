@@ -59,21 +59,53 @@ let search = function(ctx,msg,args){
 }
 
 let gimg = function(ctx,msg,args){
+    let giapi = require("google-images");
+    let gimages = new giapi(ctx.apikeys.gimg,ctx.apikeys.google);
+
     if(!args){
         msg.channel.createMessage("Arguments are required!");
     }else{
-        ctx.libs.request.get("https://api.cognitive.microsoft.com/bing/v7.0/images/search?q="+encodeURIComponent(args),{headers:{"Ocp-Apim-Subscription-Key":ctx.apikeys.microshaft}},function(err,res,body){
-            let data = JSON.parse(body).value;
-            let image = data[Math.floor(Math.random()*data.length)];
+        gimages.search(args,{safe:(msg.channel.nsfw && !msg.channel.topic.includes("[hf:no-nsfw]")) ? "off" : "high"})
+        .then(data=>{
+            let rand = Math.floor(Math.random()*data.length);
+            let img = data[rand];
 
             msg.channel.createMessage({embed:{
-                title:image.name,
-                url:image.hostPageUrl,
-                image:{url:image.contentUrl}
+                title:img.description,
+                url:img.parentPage,
+                image:{
+                    url:img.url
+                },
+                footer:{
+                    text:`Image ${rand+1}/10, rerun to get a different image.`
+                }
             }});
         });
     }
 }
+
+let fgimg = function(ctx,msg,args){
+    let giapi = require("google-images");
+    let gimages = new giapi(ctx.apikeys.gimg,ctx.apikeys.google);
+
+    if(!args){
+        msg.channel.createMessage("Arguments are required!");
+    }else{
+        gimages.search(args,{safe:(msg.channel.nsfw && !msg.channel.topic.includes("[hf:no-nsfw]")) ? "off" : "high"})
+        .then(data=>{
+            let img = data[0];
+
+            msg.channel.createMessage({embed:{
+                title:img.description,
+                url:img.parentPage,
+                image:{
+                    url:img.url
+                }
+            }});
+        });
+    }
+}
+
 
 let me_irl = async function(ctx,msg,args){
     let req = await ctx.libs.superagent.get("http://www.reddit.com/r/me_irl/top.json?sort=default&count=50");
@@ -150,21 +182,21 @@ let cmdstats = async function(ctx,msg,args){
     let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
 	let usage = JSON.parse(analytics.dataValues.cmd_usage);
 	let names = Object.keys(usage);
-	
+
 	let toSort = [];
-	
+
 	for(let i in names){
 	    toSort.push({name:names[i],value:usage[names[i]]});
 	}
-	
+
 	let sorted = toSort.sort((a,b)=>{
 	    if (a.value < b.value) return 1;
 	    if (a.value > b.value) return -1;
 	    return 0;
 	});
-	
+
 	sorted = sorted.splice(0,10);
-	
+
 	let _list = new ctx.utils.table(["#","Command","Usages"]);
     for(let i in sorted){
         _list.addRow([parseInt(i)+1,`${ctx.prefix}${sorted[i].name}`,`${sorted[i].value}`]);
@@ -198,6 +230,20 @@ module.exports = [
         func:search,
         group:"misc",
         aliases:["g","search"]
+    },
+    {
+        name:"gimg",
+        desc:"Search Google Images.",
+        func:gimg,
+        group:"misc",
+        aliases:["img"]
+    },
+    {
+        name:"fgimg",
+        desc:"Search Google Images and grab first result only.",
+        func:fgimg,
+        group:"misc",
+        aliases:["fimg"]
     },
     {
         name:"me_irl",

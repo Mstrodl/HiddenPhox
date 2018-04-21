@@ -98,13 +98,14 @@ utils.lookupUser = function(ctx,msg,str,filter){
             m.delete().catch(()=>{return;});
 						reject("Canceled");
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+						clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
 					}else if(m.content == value){
 						(await ctx.awaitMsgs.get(msg.channel.id)[msg.id].botmsg).delete();
             m.delete().catch(()=>{return;});
 						resolve(userpool[value-1]);
 						ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+						clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
 					}
-					clearTimeout(ctx.awaitMsgs.get(msg.channel.id)[msg.id].timer);
 				},60000).then(r=>{
 					resolve(r);
 				});
@@ -250,11 +251,11 @@ function timeString(){
 }
 
 utils.safeString = function(string){
-	/* the best alternatives for safe strings are here!!!! */
 	string = string.replace("`", "'");
 	string = string.replace("<@", "<@\u200b");
 	string = string.replace("<#", "<#\u200b");
 	string = string.replace("<&", "<&\u200b");
+	string = string.replace("\n"," ");
 	return string;
 }
 

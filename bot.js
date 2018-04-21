@@ -49,6 +49,8 @@ ctx.logid   = "349368487472529410";
 ctx.ownerid = "150745989836308480";
 
 ctx.apikeys = require("./apikeys.json");
+let swa = require('steam-web-api2');
+ctx.steamapi = new swa(ctx.apikeys.steam);
 
 client.on("ready",()=>{
 	console.log("HiddenPhox Instance Loaded.");

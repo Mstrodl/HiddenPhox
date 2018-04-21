@@ -224,17 +224,45 @@ let roleme = async function(ctx,msg,args){
             return;
         }*/
         msg.channel.createMessage("soon:tm:");
-    }else{
+    }else if(sub == "help"){
         let sub = [
-            "  \u2022 add - Add a role to server roleme list.",
-            "  \u2022 del(ete) - Remove a role from server roleme list.",
             "  \u2022 give - Give a roleme set role.",
             "  \u2022 rem(ove) - Remove a roleme set role.",
             "  \u2022 list - List servers set of elegible roles.",
-            "  \u2022 preset - Add a list of preset roles to your server."
+            "",
+            " **Manage Roles needed:**",
+            "  \u2022 add - Add a role to server roleme list.",
+            "  \u2022 del(ete) - Remove a role from server roleme list."
         ];
 
         msg.channel.createMessage(`__**Subcommands for roleme**__\n${sub.join("\n")}`);
+    }else{
+        ctx.utils.lookupRole(ctx, msg, args.join(" "), rmefilter)
+        .then(async r=>{
+            if(!msg.channel.permissionsOf(ctx.bot.user.id).has("manageRoles")){
+                msg.channel.createMessage("I do not have `Manage Roles` permission.");
+                return;
+            }
+            
+            let data = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
+            let rme = JSON.parse(data[0].dataValues.roleme) || [];
+
+            if(rme.includes(r.id)){
+                msg.member.addRole(r.id,"[HiddenPhox] Added via roleme.");
+                msg.addReaction("\uD83D\uDC4C");
+            }else{
+                msg.channel.createMessage("Role not elegible for roleme.");
+            }
+        }).catch(m=>{
+            if(m == "No results."){
+                msg.channel.createMessage(`No roles found. See \`${ctx.prefix}roleme list\` for a list and \`${ctx.prefix}roleme help\` for a full set of subcommands.`);
+            }else if(m == "Canceled"){
+                msg.channel.createMessage(m);
+            }else{
+                msg.channel.createMessage("An error occured and has been reported.");
+                ctx.utils.logWarn(ctx,`[roleme] ${m}`);
+            }
+        });
     }
 }
 
@@ -373,7 +401,7 @@ let ban = function(ctx,msg,args){
         .then(u=>{
             try{
                 ctx.utils.awaitMessage(ctx,msg,`${msg.author.mention}, you're about to ban **${u.username}#${u.discriminator}** for reason \`${reason ? reason : "No reason given"}\`.\n\nTo confirm type \`yes\` otherwise type anything else.`,
-                m=>{
+                async m=>{
                     if(m.content.toLowerCase() == "yes"){
                         ctx.bot.banGuildMember(msg.channel.guild.id,u.id,0,`[${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[${msg.author.username}#${msg.author.discriminator}] No reason given.`);
                         msg.addReaction("\uD83D\uDC4C");
@@ -428,6 +456,50 @@ let unban = function(ctx,msg,args){
                 msg.channel.createMessage(m);
             }
         });
+    }
+}
+
+let multikick = function(ctx,msg,args){
+    if(!args){
+        msg.channel.createMessage(`Usage: ${ctx.prefix}kick <id1> <id2> ... [reason]`);
+    }else{
+        if(!msg.channel.permissionsOf(msg.author.id).has("kickMembers")){
+            msg.channel.createMessage("You do not have `Kick Members` permission.");
+            return;
+        }
+        if(!msg.channel.permissionsOf(ctx.bot.user.id).has("kickMembers")){
+            msg.channel.createMessage("I do not have `Kick Members` permission.");
+            return;
+        }
+
+        args = ctx.utils.formatArgs(args);
+        let reason = args.splice(args.length-1).join(" ");
+        args = args.splice(0,args.length);
+
+        try{
+            ctx.utils.awaitMessage(ctx,msg,`${msg.author.mention}, you're about to kick **${args.length} users** for reason \`${reason ? reason : "No reason given"}\`.\n\nTo confirm type \`yes\` otherwise type anything else.`,
+            async m=>{
+                if(m.content.toLowerCase() == "yes"){
+                    args.map(async i=>{
+                        let u = await ctx.utils.lookupUser(ctx,msg,i)
+                        ctx.bot.kickGuildMember(msg.channel.guild.id,u.id,`[multikick] [${msg.author.username}#${msg.author.discriminator}] ${reason}` || `[multikick] [${msg.author.username}#${msg.author.discriminator}] No reason given.`)
+                        .catch(e=>{
+                            msg.channel.createMessage(`Could not kick **${u.username}#${u.discriminator}** (${i}):\n\`\`\`\n${e.message}\n\`\`\``);
+                        });
+                    });
+                    msg.addReaction("\uD83D\uDC4C")
+                    m.delete().catch(()=>{});
+                    ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                }else{
+                    msg.channel.createMessage("Multikick aborted.");
+                    m.delete().catch(()=>{})
+                    ctx.bot.removeListener("messageCreate",ctx.awaitMsgs.get(msg.channel.id)[msg.id].func);
+                }
+            });
+        }catch(e){
+            msg.channel.createMessage(`Could not kick:\n\`\`\`\n${e.message}\n\`\`\``);
+            ctx.utils.logWarn(ctx,"[multikick] "+e.message);
+        }
     }
 }
 
@@ -559,6 +631,13 @@ module.exports = [
         func:unban,
         group:"Server Utils",
         usage:"<user> [reason]"
+    },
+    {
+        name:"multikick",
+        desc:"Kick a group of users.",
+        func:multikick,
+        group:"Server Utils",
+        usage:"<id1> <id2> ... [reason]"
     },
 
     {

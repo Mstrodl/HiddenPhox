@@ -294,7 +294,7 @@ let transfer = async function(ctx,msg,args){
 
             let pin = `${Math.floor(Math.random()*10)}${Math.floor(Math.random()*10)}${Math.floor(Math.random()*10)}${Math.floor(Math.random()*10)}`;
 
-            ctx.utils.awaitMessage(ctx,msg,`${msg.author.mention}, you're about to send **${value}FC** to **${u.username}#${u.discriminator}**.\n\`\`\`diff\n- ${value}FC | transfer\n- ${tax}FC | 10% tax\n%%%%\n% ${value-tax}FC sent\`\`\`\n\nTo complete transaction, type \`${pin}\`, else type \`c\` or \`cancel\``,
+            ctx.utils.awaitMessage(ctx,msg,`${msg.author.mention}, you're about to send **${value}FC** to **${u.username}#${u.discriminator}**.\n\`\`\`diff\n- ${value}FC | transfer\n- ${tax}FC | 2.25% tax\n%%%%\n% ${value-tax}FC sent\`\`\`\n\nTo complete transaction, type \`${pin}\`, else type \`c\` or \`cancel\``,
             async m=>{
                 if(m.content.toLowerCase() == "c" || m.content.toLowerCase() == "cancel"){
                     msg.channel.createMessage("Canceled.");

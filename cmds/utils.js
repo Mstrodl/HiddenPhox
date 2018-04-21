@@ -77,7 +77,7 @@ let reload = function (ctx, msg, args) {
                 }
                 msg.addReaction("\uD83D\uDC4C");
             } catch (e) {
-                msg.channel.createMessage(`:warning: Error reloading: \`${e.message}\``);
+                msg.channel.createMessage(`:warning: Error reloading: \`\`\`${e.stack}\`\`\``);
             }
         } else {
             msg.channel.createMessage("Command not found.");
