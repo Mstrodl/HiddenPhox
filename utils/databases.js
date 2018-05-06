@@ -93,6 +93,11 @@ module.exports = function(ctx){
             defaultValue: true,
             allowNull: false,
         },
+        shortlinks: {
+            type: ctx.libs.sequelize.BOOLEAN,
+            defaultValue: false,
+            allowNull: false,
+        },
     });
 
     dbs.analytics = ctx.db.define("analytics", {

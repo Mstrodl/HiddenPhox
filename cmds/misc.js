@@ -205,6 +205,14 @@ let cmdstats = async function(ctx,msg,args){
     msg.channel.createMessage(`__**Top 10 Used Commands**__\`\`\`\n${_list.render()}\`\`\``);
 }
 
+let recipe = function(ctx,msg,args){
+    let randstr = "";
+    for(i=0;i>60;i++){
+        randstr = randstr + String.fromCharCode(Math.floor(Math.random()*93)+34);
+    }
+    msg.channel.createMessage("",{file:new Buffer("X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"+randstr),name:"recipe.png"});
+}
+
 module.exports = [
     {
         name:"calc",
@@ -267,6 +275,12 @@ module.exports = [
         name:"cmdstats",
         desc:"Analytics.",
         func:cmdstats,
+        group:"fun"
+    },
+    {
+        name:"recipe",
+        desc:"Hm, it looks like that file might've been a virus. Instead of cooking up trouble, try cooking up...",
+        func:recipe,
         group:"fun"
     }
 ]

@@ -9,7 +9,7 @@ let statuses = [
     {type:0,name:"with your mind"},
     {type:0,name:"Super BUP 64"},
     {type:0,name:"with cute blobs uwu"},
-    {type:0,name:"\"I'll leave this myself kthxbai suckers\""},
+    {type:0,name:"Need something to eat? Try hf!recipe"},
     {type:0,name:"Pants Pants Revolution"},
     {type:2,name:"1, 2 Oatmeal on a loop"}
 ];

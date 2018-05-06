@@ -48,7 +48,7 @@ let help = async function(ctx,msg,args){
     }else{
         if(ctx.cmds.filter(c=>c.name == args || (c.aliases && c.aliases.includes(args))).length > 0){
             let c = ctx.cmds.filter(c=>c.name == args || (c.aliases && c.aliases.includes(args)))[0];
-            
+
             let analytics = await ctx.db.models.analytics.findOne({where:{id:1}});
 			let usage = JSON.parse(analytics.dataValues.cmd_usage);
 
@@ -150,7 +150,7 @@ let info = function(ctx,msg,args){
             {name:"Language",value:"JavaScript",inline:true},
             {name:"Library",value:`Eris v${erisv}`,inline:true},
             {name:"Node.js Version",value:process.version,inline:true},
-            {name:"Contributors",value:`**${u.get("132297363233570816").username}#${u.get("132297363233570816").discriminator}** (Brianna) - Host, Contributor\n**${u.get("151344471957569536").username}#${u.get("151344471957569536").discriminator}** (Sammy) - Ex-host, ex-co-developer\n**${u.get("123601647258697730").username}#${u.get("123601647258697730").discriminator}** (Jane) - Contributor\n**${u.get("162819866682851329").username}#${u.get("162819866682851329").discriminator}** (Luna) - Contributor\n**Memework\u2122** - Ideas, general help, bugfixes, being a great community <3`},
+            {name:"Contributors",value:`**${u.get("132297363233570816").username}#${u.get("132297363233570816").discriminator}** (Brianna) - Ex-host, Contributor\n**${u.get("151344471957569536").username}#${u.get("151344471957569536").discriminator}** (Sammy) - Host, ex-co-developer\n**${u.get("123601647258697730").username}#${u.get("123601647258697730").discriminator}** (Jane) - Contributor\n**${u.get("162819866682851329").username}#${u.get("162819866682851329").discriminator}** (Luna) - Contributor\n**${u.get("137584770145058817").username}#${u.get("137584770145058817").discriminator}** (Ave) - Ex-host, Contributor\n**${u.get("107827535479353344").username}#${u.get("107827535479353344").discriminator}** (homonovus) - Ex-host\n**Memework\u2122** - Ideas, general help, bugfixes.`},
             {name:"Honorable Mentions",value:`**oplexz** - Running support for FlexBot\n**Discord Bots** - A once great community that had great people who helped once in a while and gave ideas`},
             {name:"Links",value:"[GitHub](https://github.com/BoxOfFlex/HiddenPhox) | [Donate](https://paypal.me/boxofflex)"}
         ]

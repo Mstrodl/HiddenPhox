@@ -275,7 +275,8 @@ let sconfig = async function(ctx,msg,args){
     let keys = [
         {name:"logging",desc:"[WIP] Enable server logging to a channel",type:"boolean"},
         {name:"logchan",desc:"[WIP] Server logging channel ID",type:"string"},
-        {name:"allow_snipe",desc:"Allow sniping of deleted and edited messages",type:"boolean"}
+        {name:"allow_snipe",desc:"Allow sniping of deleted and edited messages",type:"boolean"},
+        {name:"shortlinks",desc:"Shortcuts for longer urls",type:"boolean"}
     ]
 
     args = args.split(" ");
@@ -303,10 +304,11 @@ let sconfig = async function(ctx,msg,args){
         data[key] = val;
 
         try{
-            await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
-            await ctx.db.models.sdata.update(data,{where:{id:msg.channel.guild.id}});
-
-            msg.channel.createMessage(`Set \`${key}\` to value \`${val}\`.`);
+            let find = await ctx.db.models.sdata.findOrCreate({where:{id:msg.channel.guild.id}});
+            if(find){
+                await ctx.db.models.sdata.update(data,{where:{id:msg.channel.guild.id}});
+                msg.channel.createMessage(`Set \`${key}\` to value \`${val}\`.`);
+            }
         }catch(e){
             msg.channel.createMessage("Could not set value, try again later.");
             ctx.utils.logWarn(ctx,e);
@@ -609,7 +611,8 @@ module.exports = [
         desc:"Configure server specific values of HiddenPhox.",
         func:sconfig,
         group:"Server Utils",
-        usage:"<subcommand> [key] [value]"
+        usage:"<subcommand> [key] [value]",
+        aliases:["settings"]
     },
     {
         name:"kick",

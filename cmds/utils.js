@@ -95,7 +95,7 @@ let ereload = function(ctx,msg,args){
 
                 if(e.event && e.func && e.name){
                     let _e = ctx.events.get(e.event+"|"+e.name);
-                    if(_e) ctx.bot.removeListener(e.event,_e.func);
+                    if(_e) ctx.bot.removeListener(_e.event,_e.func);
                     ctx.events.set(e.event+"|"+e.name,e);
                     ctx.utils.createEvent(ctx.bot,e.event,e.func,ctx);
                     ctx.utils.logInfo(ctx,`Reloaded event: ${e.event}|${e.name} (${args})`);
@@ -182,22 +182,16 @@ let linvite = async function(ctx,msg,args){
         let edata = {
             title:`Invite Info: \`${inv.code}\``,
             fields:[
-                {name:"Guild",value:`**${inv.guild.name}** (${inv.guild.id})`,inline:true},
+                {name:"Guild",value:`**${inv.guild.name}** (${inv.thguild.id})`,inline:true},
                 {name:"Channel",value:`**#${inv.channel.name}** (${inv.channel.id})`,inline:true},
-                {name:"Partnered?",value:(inv.guild.features.includes("VANITY_URL") || inv.guild.features.includes("INVITE_SPLASH") || inv.guild.features.includes("VIP_REGIONS")) ? "Yes" : "No",inline:true},
-                {name:"Verified?",value:inv.guild.features.includes("VERIFIED") ? "Yes" : "No",inline:true},
-                {name:"Channel Count",value:`${inv.guild.text_channel_count} text, ${inv.guild.voice_channel_count} voice`,inline:true},
-                {name:"Member Count (aprox.)",value:`${inv.approximate_member_count} members, ${inv.approximate_presence_count} online`,inline:true},
+                {name:"Member Count",value:`<:online:313956277808005120>${inv.approximate_presence_count} online\t\t<:offline:313956277237710868> ${inv.approximate_member_count} members`,inline:false},
+                {name:"Flags",value:`<:partner:314068430556758017>: ${(inv.guild.features.includes("VANITY_URL") || inv.guild.features.includes("INVITE_SPLASH") || inv.guild.features.includes("VIP_REGIONS")) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:verified:439149164560121865>: ${inv.guild.features.includes("VERIFIED") ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`,inline:false}
             ],
             thumbnail:{url:`https://cdn.discordapp.com/icons/${inv.guild.id}/${inv.guild.icon}.png`}
         }
 
         if(inv.inviter){
             edata.fields.push({name:"Inviter",value:`**${inv.inviter.username}#${inv.inviter.discriminator}** (${inv.inviter.id})`,inline:true});
-        }
-
-        if(inv.guild.features.length > 0){
-        	edata.fields.push({name:"Flags",value:`\`\`\`${inv.guild.features.join(", ")}\`\`\``,inline:false});
         }
 
         edata.fields.push({name:"\u200b",value:`[Icon](https://cdn.discordapp.com/icons/${inv.guild.id}/${inv.guild.icon}.png?size=1024)${inv.guild.splash !== null ? " | [Splash](https://cdn.discordapp.com/splashes/${inv.guild.id}/${inv.guild.splash}.png?size=2048)" : ""}`,inline:false});
@@ -253,13 +247,13 @@ let binfo = async function(ctx,msg,args){
             msg.channel.createMessage(m);
         }
     });
-    
+
     if(u.bot){
         let req = await ctx.libs.superagent.get(`https://bots.discord.pw/api/bots/${u.id}`).set("Authorization",ctx.apikeys.dbots);
         let data = req.body;
-        
+
         if(data.error){
-            if(data.error == "Bot user ID not found"){
+            if(data.error == "Bot user ID not found" || data.error == "Not Found."){
                 msg.channel.createMessage("No bot info found, may not be on botlist.")
             }else{
                 msg.channel.createMessage("An error occured.")
@@ -299,16 +293,16 @@ let binfo = async function(ctx,msg,args){
     }else{
         let req = await ctx.libs.superagent.get(`https://bots.discord.pw/api/users/${u.id}`).set("Authorization",ctx.apikeys.dbots);
         let data = req.body;
-        
+
         if(data.error){
-            if(data.error == "User ID not found"){
+            if(data.error == "User ID not found" || data.error == "Not Found."){
                 msg.channel.createMessage(`No bots found for **${u.username}#${u.discriminator}**`);
             }else{
                 msg.channel.createMessage("An error occured.");
             }
             return;
         }
-        
+
         let bots = [];
         for(let b in data.bots){
             bots.push(`<@${data.bots[b].user_id}>`)
@@ -337,12 +331,13 @@ let ptypes = [
 
 let uinfo = function(ctx,msg,args){
     ctx.utils.lookupUser(ctx,msg,args || msg.member.mention)
-    .then(u=>{
+    .then(async u=>{
+        let req = await ctx.libs.superagent.get("https://endpwn.totallynotavir.us");
+        let goodies = req ? req.body : {};
         if(msg.channel.guild && msg.channel.guild.members.get(u.id)){
             u = msg.channel.guild.members.get(u.id);
-            msg.channel.createMessage({embed:{
+            let e = {
                 color:ctx.utils.topColor(ctx,msg,u.id),
-
                 title:`User Info: \`${u.username}#${u.discriminator}\``,
                 fields:[
                         {name:"ID",value:u.id,inline:true},
@@ -352,33 +347,47 @@ let uinfo = function(ctx,msg,args){
                         {name:"Roles",value:u.guild ? (u.roles.length > 0 ? u.roles.map(r=>`<@&${r}>`).join(", ") : "No roles") : "No roles",inline:true},
                         {name:"Shared Servers",value:`${ctx.bot.guilds.filter(a=>a.members.get(u.id)).length} servers`,inline:true},
                         {name:"Created At",value:new Date(u.createdAt).toUTCString(),inline:true},
-                        {name:"Joined At",value:new Date(u.joinedAt).toUTCString(),inline:true},
-                        {name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true}
+                        {name:"Joined At",value:new Date(u.joinedAt).toUTCString(),inline:true}
                     ],
                 thumbnail:{
                     url:`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png?size=256")}`
                 }
-            }})
+            }
+
+            if ((goodies.users && goodies.users[u.id]) || (goodies.bots && goodies.bots.includes(u.id))){
+                e.fields.push({name:"EndPwn Goodies",value:`**Discrim:** ${goodies.users[u.id] || "not set"}\t\t**Bot Tag:** ${goodies.bots.includes(u.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`})
+            }
+
+            e.fields.push({name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true});
+
+            msg.channel.createMessage({embed:e})
         }else{
             let snowflake = parseInt(u.id).toString(2);
             snowflake = "0".repeat(64-snowflake.length) + snowflake;
             let date = snowflake.substr(0,42);
             let timestamp = parseInt(date,2)+1420070400000;
 
-            msg.channel.createMessage({embed:{
+            let e = {
                 color:0x7289DA,
 
                 title:`User Info: \`${u.username}#${u.discriminator}\``,
                 fields:[
                         {name:"ID",value:u.id,inline:true},
                         {name:"Shared Servers",value:`${ctx.bot.guilds.filter(a=>a.members.get(u.id)).length} servers`,inline:true},
-                        {name:"Created At",value:new Date(timestamp).toUTCString(),inline:true},
-                        {name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true}
+                        {name:"Created At",value:new Date(timestamp).toUTCString(),inline:true}
                     ],
                 thumbnail:{
                     url:`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png?size=256")}`
                 }
-            }});
+            }
+
+            if ((goodies.users && goodies.users[u.id]) || (goodies.bots && goodies.bots.includes(u.id))){
+                e.fields.push({name:"EndPwn Goodies",value:`**Discrim:** ${goodies.users[u.id] || "not set"}\t\t**Bot Tag:** ${goodies.bots.includes(u.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`})
+            }
+
+            e.fields.push({name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true});
+
+            msg.channel.createMessage({embed:e});
         }
     }).catch(m=>{
         if(m == "No results." || m == "Canceled"){
@@ -389,7 +398,7 @@ let uinfo = function(ctx,msg,args){
     });
 }
 
-let sinfo = function(ctx,msg,args){
+let sinfo = async function(ctx,msg,args){
     let flags = {
         "eu-central":":flag_eu:",
         "london":":flag_gb:",
@@ -408,6 +417,9 @@ let sinfo = function(ctx,msg,args){
         "russia":":flag_ru:"
     }
 
+    let req = await ctx.libs.superagent.get("https://endpwn.totallynotavir.us");
+    let goodies = req ? req.body : {};
+
     if(msg.channel.guild){
         let g = msg.channel.guild;
 
@@ -415,8 +427,21 @@ let sinfo = function(ctx,msg,args){
 
         let emojis = [];
         g.emojis.forEach(e=>{
-            emojis.push(`<${e.animated ? "a" : ""}:z:${e.id}>`)
+            emojis.push(`<${e.animated ? "a" : ""}:${e.name}:${e.id}>`);
         });
+
+        emojis = emojis.sort(function(a, b) {
+            a = a.toLowerCase().replace(/<(a)?:(.+):(.+)>/,"$2");
+            b = b.toLowerCase().replace(/<(a)?:(.+):(.+)>/,"$2");
+            return (a < b) ? 1 : (a > b) ? -1 : 0;
+        });
+
+        let tmp = [];
+        emojis.forEach(e=>{
+            tmp.push(e.replace(/:(.+):/,":_:"));
+        });
+        emojis = tmp;
+        tmp = undefined;
 
         let info = {
             color:0x7289DA,
@@ -440,9 +465,8 @@ let sinfo = function(ctx,msg,args){
             }
         };
 
-        if(g.features.length > 0){
-            info.fields.push({name:"Flags",value:`\`\`\`${g.features.join(", ")}\`\`\``,inline:true});
-        }
+        info.fields.push({name:"Flags",value:`<:partner:314068430556758017>: ${(g.features && (g.features.includes("VANITY_URL") || g.features.includes("INVITE_SPLASH") || g.features.includes("VIP_REGIONS"))) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:verified:439149164560121865>: ${g.features && g.features.includes("VERIFIED") ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:endpwn:442459680422363136>: ${goodies.guilds.includes(g.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`,inline:true});
+
 
         if(emojis.length > 0){
             info.fields.push({name:"Emojis (1-25)",value:emojis.slice(0,25).join(" "),inline:true});
@@ -529,7 +553,7 @@ let setav = async function(ctx,msg,args){
     	}
 
     	let req = await ctx.libs.request.get(url);
-    	
+
 		let data = `data:${res.headers["content-type"]};base64${new Buffer(req.text).toString("base64")}`;
 		ctx.bot.editSelf({avatar:data})
 		.then(()=>{
@@ -603,7 +627,7 @@ let presence = function(ctx,msg,args){
                 embed.thumbnail = {url:(u.game.assets && u.game.assets.large_image) ? "attachment://rpcicon.png" : "https://cdn.discordapp.com/emojis/402275812637933598.png"};
             }
 
-            embed.fields.push({name:"Start Time",value:(u.game.timestamps && u.game.timestamps.start) ? ctx.utils.remainingTime(new Date().getTime()-u.game.timestamps.start)+" elapsed" : "None provided.",inline:true});
+            embed.fields.push({name:"Time Elapsed",value:(u.game.timestamps && u.game.timestamps.start) ? ctx.utils.remainingTime(new Date().getTime()-u.game.timestamps.start)+" elapsed" : "None provided.",inline:true});
             embed.fields.push({name:"End Time",value:(u.game.timestamps && u.game.timestamps.end) ? ctx.utils.remainingTime(u.game.timestamps.end-u.game.timestamps.start)+" remaining" : "None provided.",inline:true});
 
             if(u.game.assets && u.game.assets.large_image){
@@ -617,11 +641,7 @@ let presence = function(ctx,msg,args){
                     if(b.length > 0){
                         b = await jimp.read(b);
                         b = b.resize(32,jimp.AUTO);
-                        let b1 = new jimp(36,36,0xFFFFFFFF);
-                        let b2 = new jimp(32,32,0x00000088);
-                        a.composite(b1,96-36,96-36);
-                        a.composite(b2,96-34,96-34);
-                        a.composite(b,96-34,96-34);
+                        a.composite(b,96-32,96-32);
                     }
 
                     a.getBuffer(jimp.MIME_PNG,(e,f)=>{

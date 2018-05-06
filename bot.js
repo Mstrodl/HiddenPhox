@@ -1,6 +1,6 @@
 const Eris = require("eris");
 const config = require("./config.json");
-const client = new Eris(config.token);
+const client = new Eris(config.token,{defaultImageFormat:"png",defaultImageSize:1024});
 
 const ctx = {};
 ctx.client = client;
@@ -8,7 +8,6 @@ ctx.bot = client;
 ctx.libs = {
 	eris:Eris,
 	jimp:require("jimp"),
-	request:require("request"),
 	fs:require("fs"),
 	reload:require("require-reload")(require),
 	math:require("expr-eval").Parser,
@@ -140,9 +139,15 @@ for(let f of files){
 client.on("messageCreate",msg=>{
 	if(msg.author && !msg.author.bot){
 		let prefix = ctx.prefix;
+		let prefix2 = ctx.bot.user.mention+" ";
 		let hasRan = false;
+		let content = msg.content;
+		
+		if(content.startsWith(prefix2)){
+			content = content.replace(prefix2,prefix);
+		}
 
-		let [cmd, ...args] = msg.content.split(" ");
+		let [cmd, ...args] = content.split(" ");
 
 		let [cmd2, ...args2] = msg.cleanContent.split(" ");
 
