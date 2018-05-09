@@ -97,6 +97,7 @@ let types = {
 
 let channelUpdate = async function(channel,oldChannel,ctx){
 	if(!channel.guild) return;
+	if(channel.positions != oldChannel.position) return;
 	if(await isLoggingEnabled(ctx,{channel:channel}) === true){
 		let fields = [
 			{name:"ID",value:channel.id ? channel.id : "<no id given>",inline:true},
@@ -223,9 +224,10 @@ let msgDelBulk = async function(msgs,ctx){
 let userUpdate = function(user,oldUser,ctx){
 	ctx.bot.guilds.forEach(async g=>{
 		if(!g.members.get(user.id)) return;
+		if(user && oldUser && (user.username == oldUser.username || user.discriminator == oldUser.discriminator || user.avatar == oldUser.avatar)) return;
 		if(await isLoggingEnabled(ctx,{channel:{guild:g}}) === true){
 			let e = {
-				title:":credit_card:  User Updated",
+				title:":credit_card: User Updated",
 				color:0xAA0000,
 				fields:[
 					{name:"User",value:`<@${user.id}> (${user.username}#${user.discriminator})`,inline:true},
@@ -235,14 +237,14 @@ let userUpdate = function(user,oldUser,ctx){
 				}
 			}
 
-			if(user.name != oldUser.name){
-				fields.push({name:"Name",value:`${user.name} (was ${oldUser.name})`,inline:true});
+			if(user.username != oldUser.username){
+				e.fields.push({name:"Name",value:`${user.username} (was ${oldUser.name})`,inline:true});
 			}
 			if(user.discriminator != oldUser.discriminator){
-				fields.push({name:"Discrim",value:`#${user.discriminator} (was #${oldUser.discriminator})`,inline:true});
+				e.fields.push({name:"Discrim",value:`#${user.discriminator} (was #${oldUser.discriminator})`,inline:true});
 			}
 			if(user.avatar != oldUser.avatar){
-				fields.push({name:"Avatar Updated",value:`${user.avatar} (was #${oldUser.avatar})`,inline:true});
+				e.fields.push({name:"Avatar Updated",value:`${user.avatar} (was #${oldUser.avatar})`,inline:true});
 			}
 
 			let log = await getLogChannel(ctx,{channel:{guild:guild}});

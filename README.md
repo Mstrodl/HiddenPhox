@@ -1,2 +1,2 @@
 # HiddenPhox
-FlexBot v9 Continuation
+A general use and utility Discord bot

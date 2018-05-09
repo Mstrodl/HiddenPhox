@@ -174,6 +174,8 @@ let cflake = function(ctx,msg,args){
 
 let linvite = async function(ctx,msg,args){
     let data = await ctx.libs.superagent.get(`https://discordapp.com/api/v7/invites/${args}?with_counts=1`).set("User-Agent","HiddenPhox (v9, Eris)").set("Content-Type","application/json").set("Authorization",ctx.bot.token);
+    let req = await ctx.libs.superagent.get("https://endpwn.cathoderay.tube/goodies.json");
+    let goodies = req ? req.body : {};
     let inv = data.body;
 
     if(inv.message && inv.message == "Unknown Invite"){
@@ -182,10 +184,10 @@ let linvite = async function(ctx,msg,args){
         let edata = {
             title:`Invite Info: \`${inv.code}\``,
             fields:[
-                {name:"Guild",value:`**${inv.guild.name}** (${inv.thguild.id})`,inline:true},
+                {name:"Guild",value:`**${inv.guild.name}** (${inv.guild.id})`,inline:true},
                 {name:"Channel",value:`**#${inv.channel.name}** (${inv.channel.id})`,inline:true},
                 {name:"Member Count",value:`<:online:313956277808005120>${inv.approximate_presence_count} online\t\t<:offline:313956277237710868> ${inv.approximate_member_count} members`,inline:false},
-                {name:"Flags",value:`<:partner:314068430556758017>: ${(inv.guild.features.includes("VANITY_URL") || inv.guild.features.includes("INVITE_SPLASH") || inv.guild.features.includes("VIP_REGIONS")) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:verified:439149164560121865>: ${inv.guild.features.includes("VERIFIED") ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`,inline:false}
+                {name:"Flags",value:`<:partner:314068430556758017>: ${(inv.guild.features.includes("VANITY_URL") || inv.guild.features.includes("INVITE_SPLASH") || inv.guild.features.includes("VIP_REGIONS")) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:verified:439149164560121865>: ${inv.guild.features.includes("VERIFIED") ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}${goodies.guilds.includes(inv.guild.id) ? "\t\t<:endpwn:442459680422363136>: <:GreenTick:349381062176145408>" : ""}`,inline:false}
             ],
             thumbnail:{url:`https://cdn.discordapp.com/icons/${inv.guild.id}/${inv.guild.icon}.png`}
         }
@@ -332,7 +334,7 @@ let ptypes = [
 let uinfo = function(ctx,msg,args){
     ctx.utils.lookupUser(ctx,msg,args || msg.member.mention)
     .then(async u=>{
-        let req = await ctx.libs.superagent.get("https://endpwn.totallynotavir.us");
+        let req = await ctx.libs.superagent.get("https://endpwn.cathoderay.tube/goodies.json");
         let goodies = req ? req.body : {};
         if(msg.channel.guild && msg.channel.guild.members.get(u.id)){
             u = msg.channel.guild.members.get(u.id);
@@ -355,7 +357,7 @@ let uinfo = function(ctx,msg,args){
             }
 
             if ((goodies.users && goodies.users[u.id]) || (goodies.bots && goodies.bots.includes(u.id))){
-                e.fields.push({name:"EndPwn Goodies",value:`**Discrim:** ${goodies.users[u.id] || "not set"}\t\t**Bot Tag:** ${goodies.bots.includes(u.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`})
+                e.fields.push({name:"EndPwn Goodies",value:`**Discrim:** ${goodies.users[u.id] || "not set"}\t\t**Bot Tag:** ${goodies.bots.includes(u.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}${goodies.devs.includes(u.id) ? "\t\t**Dev:** <:GreenTick:349381062176145408>" : ""}`})
             }
 
             e.fields.push({name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true});
@@ -382,7 +384,7 @@ let uinfo = function(ctx,msg,args){
             }
 
             if ((goodies.users && goodies.users[u.id]) || (goodies.bots && goodies.bots.includes(u.id))){
-                e.fields.push({name:"EndPwn Goodies",value:`**Discrim:** ${goodies.users[u.id] || "not set"}\t\t**Bot Tag:** ${goodies.bots.includes(u.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`})
+                e.fields.push({name:"EndPwn Goodies",value:`**Discrim:** ${goodies.users[u.id] || "not set"}\t\t**Bot Tag:** ${goodies.bots.includes(u.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}${goodies.devs.includes(u.id) ? "\t\t**Dev:** <:GreenTick:349381062176145408>" : ""}`})
             }
 
             e.fields.push({name:"Avatar",value:"[Full Size]("+`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${(u.avatar.startsWith("a_") ? "gif" : "png")}?size=1024`+")",inline:true});
@@ -417,7 +419,7 @@ let sinfo = async function(ctx,msg,args){
         "russia":":flag_ru:"
     }
 
-    let req = await ctx.libs.superagent.get("https://endpwn.totallynotavir.us");
+    let req = await ctx.libs.superagent.get("https://endpwn.cathoderay.tube/goodies.json");
     let goodies = req ? req.body : {};
 
     if(msg.channel.guild){
@@ -465,7 +467,7 @@ let sinfo = async function(ctx,msg,args){
             }
         };
 
-        info.fields.push({name:"Flags",value:`<:partner:314068430556758017>: ${(g.features && (g.features.includes("VANITY_URL") || g.features.includes("INVITE_SPLASH") || g.features.includes("VIP_REGIONS"))) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:verified:439149164560121865>: ${g.features && g.features.includes("VERIFIED") ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:endpwn:442459680422363136>: ${goodies.guilds.includes(g.id) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}`,inline:true});
+        info.fields.push({name:"Flags",value:`<:partner:314068430556758017>: ${(g.features && (g.features.includes("VANITY_URL") || g.features.includes("INVITE_SPLASH") || g.features.includes("VIP_REGIONS"))) ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}\t\t<:verified:439149164560121865>: ${g.features && g.features.includes("VERIFIED") ? "<:GreenTick:349381062176145408>" : "<:RedTick:349381062054510604>"}${goodies.guilds.includes(g.id) ? "\t\t<:endpwn:442459680422363136>: <:GreenTick:349381062176145408>" : ""}`,inline:true});
 
 
         if(emojis.length > 0){

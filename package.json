@@ -1,5 +1,5 @@
 {
-  "name": "flexbot",
+  "name": "hiddenphox",
   "version": "9.0.0",
   "description": "A discord bot",
   "main": "bot.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LUModder/FlexBot.git"
+    "url": "git+https://github.com/Cynosphere/HiddenPhox.git"
   },
   "keywords": [
     "discord"
@@ -16,9 +16,9 @@
   "author": "Flex",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/LUModder/FlexBot/issues"
+    "url": "https://github.com/Cynosphere/HiddenPhox/issues"
   },
-  "homepage": "https://github.com/LUModder/FlexBot#readme",
+  "homepage": "https://github.com/Cynosphere/HiddenPhox#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "colorcolor": "^1.1.1",

@@ -143,8 +143,8 @@ let info = function(ctx,msg,args){
     let u = ctx.bot.users;
 
     msg.channel.createMessage({embed:{
-        title:"HiddenPhox, continuation of FlexBot v9",
-        description:`A general use bot written by **Cynthia Foxwell** \`${u.get("150745989836308480").username}#${u.get("150745989836308480").discriminator}\`.`,
+        title:"HiddenPhox, a general use and utility bot",
+        description:`Written by **Cynthia Foxwell** \`${u.get("150745989836308480").username}#${u.get("150745989836308480").discriminator}\`.`,
         color:0x50596D,
         fields:[
             {name:"Language",value:"JavaScript",inline:true},
@@ -152,7 +152,7 @@ let info = function(ctx,msg,args){
             {name:"Node.js Version",value:process.version,inline:true},
             {name:"Contributors",value:`**${u.get("132297363233570816").username}#${u.get("132297363233570816").discriminator}** (Brianna) - Ex-host, Contributor\n**${u.get("151344471957569536").username}#${u.get("151344471957569536").discriminator}** (Sammy) - Host, ex-co-developer\n**${u.get("123601647258697730").username}#${u.get("123601647258697730").discriminator}** (Jane) - Contributor\n**${u.get("162819866682851329").username}#${u.get("162819866682851329").discriminator}** (Luna) - Contributor\n**${u.get("137584770145058817").username}#${u.get("137584770145058817").discriminator}** (Ave) - Ex-host, Contributor\n**${u.get("107827535479353344").username}#${u.get("107827535479353344").discriminator}** (homonovus) - Ex-host\n**Memework\u2122** - Ideas, general help, bugfixes.`},
             {name:"Honorable Mentions",value:`**oplexz** - Running support for FlexBot\n**Discord Bots** - A once great community that had great people who helped once in a while and gave ideas`},
-            {name:"Links",value:"[GitHub](https://github.com/BoxOfFlex/HiddenPhox) | [Donate](https://paypal.me/boxofflex)"}
+            {name:"Links",value:"[GitHub](https://github.com/Cynosphere/HiddenPhox)"}
         ]
     }});
 }
