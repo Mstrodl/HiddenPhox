@@ -178,7 +178,7 @@ let info = function(ctx,msg,args){
 
     const contributorPrettyText = contributors.map(({id, name, contribs}) => {
         const user = u.get(id);
-        return `**${user.username}#${user.discriminator}** (${name} - ${contribs}`;
+        return `**${user.username}#${user.discriminator}** (${name}) - ${contribs}`;
     }).join("\n");
 
     const owner = u.get("150745989836308480");
