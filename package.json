@@ -34,7 +34,7 @@
     "sequelize": "^4.37.6",
     "sodium-native": "^2.1.5",
     "sourcequery": "0.0.2",
-    "sqlite3": "^3.1.13",
+    "sqlite3": "^4.0.1",
     "steam-web-api2": "^2.0.3",
     "superagent": "^3.8.3",
     "svg2png": "^4.1.1",
